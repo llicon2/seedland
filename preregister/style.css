@@ -1,0 +1,21 @@
+body{
+
+background:#6dbf4b;
+color:white;
+font-family:sans-serif;
+text-align:center;
+padding-top:100px;
+
+}
+
+button{
+
+background:#2f7d32;
+border:none;
+padding:15px 30px;
+font-size:18px;
+color:white;
+border-radius:10px;
+cursor:pointer;
+
+}
