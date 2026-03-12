@@ -1,12 +1,12 @@
 let users = JSON.parse(localStorage.getItem("seedland_users")) || [];
 
 function preregister() {
-    const tg = window.Telegram.WebApp;
 
+    const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe.user;
 
     if (!user) {
-        alert("Debes abrir esto desde Telegram");
+        alert("Abre esto desde Telegram");
         return;
     }
 
@@ -19,6 +19,10 @@ function preregister() {
         });
 
         localStorage.setItem("seedland_users", JSON.stringify(users));
+
+        document.getElementById("status").innerText = "✅ Ya estás preregistrado!";
+    } else {
+        document.getElementById("status").innerText = "⚠️ Ya estabas preregistrado.";
     }
 
     document.getElementById("count").innerText = users.length;

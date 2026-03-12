@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html>
-<head>
 
+<head>
 <meta charset="UTF-8">
 <title>SeedLand Pre-registro</title>
 
 <link rel="stylesheet" href="style.css">
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 </head>
 
 <body>
@@ -19,7 +18,10 @@
 Pre-regístrate y recibe recompensas cuando el juego abra
 </p>
 
-<button id="register">
+<p>Jugadores preregistrados:</p>
+<h2 id="count">0</h2>
+
+<button onclick="preregister()">
 🚀 Pre-registrarme
 </button>
 
@@ -29,12 +31,3 @@ Pre-regístrate y recibe recompensas cuando el juego abra
 
 </body>
 </html>
-<h1>🌱 Seedland</h1>
-
-<p>Jugadores preregistrados:</p>
-<h2 id="count">0</h2>
-
-<button onclick="preregister()">Pre-registrarme</button>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="app.js"></script>
