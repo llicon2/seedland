@@ -3,7 +3,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-async function preregister(){
+window.preregister = async function(){
 
 const tg = window.Telegram.WebApp
 const user = tg.initDataUnsafe.user
