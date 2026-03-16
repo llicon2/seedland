@@ -18,7 +18,7 @@ document.getElementById("status").innerText =
 return
 }
 
-const { error } = await supabase
+const { data, error } = await supabase
 .from("players")
 .insert([
 {
@@ -27,31 +27,41 @@ telegram_id: user.id
 ])
 
 if(error){
+
+console.log("ERROR SUPABASE:", error)
+
 document.getElementById("status").innerText =
-"⚠️ Ya estabas preregistrado"
+"❌ Error guardando jugador"
+
 }else{
+
 document.getElementById("status").innerText =
 "✅ Preregistro completado"
+
 }
 
 loadCount()
 
 }
 
-// ESTA ES LA FUNCION QUE CUENTA LOS JUGADORES
+// CONTADOR DE JUGADORES
 async function loadCount(){
 
 const { count, error } = await supabase
 .from("players")
 .select("*", { count: "exact", head: true })
 
-if(!error){
-document.getElementById("count").innerText = count
+if(error){
+
+console.log("ERROR CONTADOR:", error)
+
 }else{
-console.log(error)
-}
+
+document.getElementById("count").innerText = count
 
 }
 
-// CARGA EL CONTADOR CUANDO ABRE LA PAGINA
+}
+
+// CARGAR CONTADOR AL ABRIR
 loadCount()
