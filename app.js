@@ -22,7 +22,8 @@ const { data, error } = await supabase
 .from("players")
 .insert([
 {
-telegram_id: user.id
+telegram_id: user.id,
+name: user.first_name
 }
 ])
 
