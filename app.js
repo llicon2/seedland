@@ -32,19 +32,26 @@ document.getElementById("status").innerText =
 }else{
 document.getElementById("status").innerText =
 "✅ Preregistro completado"
+}
+
 loadCount()
-}
 
 }
 
+// ESTA ES LA FUNCION QUE CUENTA LOS JUGADORES
 async function loadCount(){
 
-const { count } = await supabase
+const { count, error } = await supabase
 .from("players")
 .select("*", { count: "exact", head: true })
 
+if(!error){
 document.getElementById("count").innerText = count
+}else{
+console.log(error)
+}
 
 }
 
+// CARGA EL CONTADOR CUANDO ABRE LA PAGINA
 loadCount()
