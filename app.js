@@ -1,68 +1,70 @@
-console.log("APP INICIADA")
+console.log("APP INICIADA");
 
-const SUPABASE_URL = "https://lvtpsqoqywoxrvbqfycd.supabase.co"
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dHBzcW9xeXdveHJ2YnFmeWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNDg1ODEsImV4cCI6MjA4ODkyNDU4MX0.AiHAyOS3zZrX3R1gPhp6GlXDOI5RO6eEF1lnLv0tnCU"
+const SUPABASE_URL = "https://lvtpsqoqywoxrvbqfycd.supabase.co";
+const SUPABASE_KEY = "TU_SUPABASE_ANON_KEY";
 
-var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Inicializar Telegram WebApp una vez
+const tg = window.Telegram.WebApp;
+tg.ready();
 
 window.preregister = async function () {
+  const statusEl = document.getElementById("status");
 
-const tg = window.Telegram.WebApp
-tg.ready()
+  try {
+    const user = tg.initDataUnsafe?.user;
 
-const user = tg.initDataUnsafe.user
+    if (!user) {
+      statusEl.innerText = "❌ Abre esta app desde Telegram";
+      return;
+    }
 
-if(!user){
-document.getElementById("status").innerText =
-"❌ Error cargando usuario de Telegram"
-return
-}
+    statusEl.innerText = "⏳ Guardando preregistro...";
 
-const { data, error } = await supabase
-.from("players")
-.insert([
-{
-telegram_id: user.id,
-name: user.first_name
-}
-])
+    const { error } = await supabase
+      .from("players")
+      .upsert(
+        {
+          telegram_id: user.id,
+          name: user.first_name || "Jugador"
+        },
+        {
+          onConflict: "telegram_id"
+        }
+      );
 
-if(error){
+    if (error) {
+      console.log("ERROR SUPABASE:", error);
+      statusEl.innerText = "❌ Error guardando jugador: " + error.message;
+      return;
+    }
 
-console.log("ERROR SUPABASE:", error)
+    statusEl.innerText = "✅ Preregistro completado";
+    await loadCount();
 
-document.getElementById("status").innerText =
-"❌ Error guardando jugador"
-
-}else{
-
-document.getElementById("status").innerText =
-"✅ Preregistro completado"
-
-}
-
-loadCount()
-
-}
+  } catch (err) {
+    console.log("ERROR GENERAL:", err);
+    statusEl.innerText = "❌ Error inesperado";
+  }
+};
 
 // CONTADOR DE JUGADORES
-async function loadCount(){
+async function loadCount() {
+  const countEl = document.getElementById("count");
 
-const { count, error } = await supabase
-.from("players")
-.select("*", { count: "exact", head: true })
+  const { count, error } = await supabase
+    .from("players")
+    .select("*", { count: "exact", head: true });
 
-if(error){
+  if (error) {
+    console.log("ERROR CONTADOR:", error);
+    countEl.innerText = "0";
+    return;
+  }
 
-console.log("ERROR CONTADOR:", error)
-
-}else{
-
-document.getElementById("count").innerText = count
-
-}
-
+  countEl.innerText = count ?? 0;
 }
 
 // CARGAR CONTADOR AL ABRIR
-loadCount()
+loadCount();

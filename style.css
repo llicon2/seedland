@@ -1,21 +1,27 @@
 body{
 
-background:#6dbf4b;
-color:white;
-font-family:sans-serif;
+font-family: Arial;
 text-align:center;
-padding-top:100px;
+background:#0f1a12;
+color:white;
+padding:40px;
 
 }
 
 button{
 
-background:#2f7d32;
-border:none;
-padding:15px 30px;
+padding:15px 25px;
 font-size:18px;
-color:white;
+border:none;
 border-radius:10px;
+background:#4CAF50;
+color:white;
 cursor:pointer;
+
+}
+
+button:hover{
+
+background:#45a049;
 
 }
