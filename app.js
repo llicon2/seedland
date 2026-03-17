@@ -8,39 +8,127 @@ const tg = window.Telegram.WebApp;
 
 tg.ready();
 
-document.getElementById("btn").addEventListener("click", preregister);
+const btn = document.getElementById("btn");
+const copyRefBtn = document.getElementById("copyRefBtn");
+const statusEl = document.getElementById("status");
+const countEl = document.getElementById("count");
+const myRefCountEl = document.getElementById("myRefCount");
+const refLinkEl = document.getElementById("refLink");
+
+btn.addEventListener("click", preregister);
+copyRefBtn.addEventListener("click", copyReferralLink);
+
+function getTelegramUser() {
+  return tg.initDataUnsafe?.user || null;
+}
+
+function getReferrerIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+
+  if (!ref) return null;
+
+  const parsed = Number(ref);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function getReferralLink(userId) {
+  return `https://t.me/seedlands_bot?start=${userId}`;
+}
 
 async function preregister() {
-  const status = document.getElementById("status");
-  const user = tg.initDataUnsafe?.user;
+  const user = getTelegramUser();
 
   if (!user) {
-    status.innerText = "❌ Abre esta app desde Telegram";
+    statusEl.innerText = "❌ Abre esta app desde Telegram";
     return;
   }
 
-  status.innerText = "⏳ Guardando...";
+  statusEl.innerText = "⏳ Guardando...";
 
-  const { error } = await sb
-    .from("players")
-    .upsert(
-      {
-        telegram_id: user.id,
-        name: user.first_name || "Jugador"
-      },
-      {
-        onConflict: "telegram_id"
+  try {
+    const myTelegramId = Number(user.id);
+    const referrerId = getReferrerIdFromUrl();
+
+    const { data: existingPlayer, error: existingError } = await sb
+      .from("players")
+      .select("telegram_id, referred_by")
+      .eq("telegram_id", myTelegramId)
+      .maybeSingle();
+
+    if (existingError) {
+      console.log("ERROR BUSCANDO JUGADOR:", existingError);
+      statusEl.innerText = "❌ Error buscando jugador";
+      return;
+    }
+
+    const isNewPlayer = !existingPlayer;
+
+    let referredByValue = null;
+
+    if (isNewPlayer) {
+      if (
+        referrerId &&
+        referrerId !== myTelegramId
+      ) {
+        referredByValue = referrerId;
       }
-    );
+    } else {
+      referredByValue = existingPlayer.referred_by ?? null;
+    }
 
-  if (error) {
-    console.log("ERROR SUPABASE:", error);
-    status.innerText = "❌ Error: " + error.message;
-    return;
+    const { error: upsertError } = await sb
+      .from("players")
+      .upsert(
+        {
+          telegram_id: myTelegramId,
+          name: user.first_name || "Jugador",
+          referred_by: referredByValue
+        },
+        {
+          onConflict: "telegram_id"
+        }
+      );
+
+    if (upsertError) {
+      console.log("ERROR SUPABASE:", upsertError);
+      statusEl.innerText = "❌ Error: " + upsertError.message;
+      return;
+    }
+
+    if (isNewPlayer && referredByValue) {
+      const { data: referrerData, error: referrerFetchError } = await sb
+        .from("players")
+        .select("referrals_count")
+        .eq("telegram_id", referredByValue)
+        .maybeSingle();
+
+      if (referrerFetchError) {
+        console.log("ERROR OBTENIENDO INVITADOR:", referrerFetchError);
+      } else if (referrerData) {
+        const currentCount = referrerData.referrals_count || 0;
+
+        const { error: updateRefError } = await sb
+          .from("players")
+          .update({
+            referrals_count: currentCount + 1
+          })
+          .eq("telegram_id", referredByValue);
+
+        if (updateRefError) {
+          console.log("ERROR ACTUALIZANDO REFERIDOS:", updateRefError);
+        }
+      }
+    }
+
+    statusEl.innerText = "✅ Preregistro completado";
+
+    await loadCount();
+    await loadMyReferralInfo();
+  } catch (err) {
+    console.log("ERROR GENERAL:", err);
+    statusEl.innerText = "❌ Error inesperado";
   }
-
-  status.innerText = "✅ Preregistro completado";
-  await loadCount();
 }
 
 async function loadCount() {
@@ -53,7 +141,54 @@ async function loadCount() {
     return;
   }
 
-  document.getElementById("count").innerText = count ?? 0;
+  countEl.innerText = count ?? 0;
+}
+
+async function loadMyReferralInfo() {
+  const user = getTelegramUser();
+
+  if (!user) {
+    myRefCountEl.innerText = "0";
+    refLinkEl.innerText = "";
+    return;
+  }
+
+  const myTelegramId = Number(user.id);
+
+  refLinkEl.innerText = getReferralLink(myTelegramId);
+
+  const { data, error } = await sb
+    .from("players")
+    .select("referrals_count")
+    .eq("telegram_id", myTelegramId)
+    .maybeSingle();
+
+  if (error) {
+    console.log("ERROR MIS REFERIDOS:", error);
+    return;
+  }
+
+  myRefCountEl.innerText = data?.referrals_count ?? 0;
+}
+
+async function copyReferralLink() {
+  const user = getTelegramUser();
+
+  if (!user) {
+    statusEl.innerText = "❌ Abre esta app desde Telegram";
+    return;
+  }
+
+  const link = getReferralLink(Number(user.id));
+
+  try {
+    await navigator.clipboard.writeText(link);
+    statusEl.innerText = "✅ Link copiado";
+  } catch (err) {
+    console.log("ERROR COPIANDO LINK:", err);
+    statusEl.innerText = "❌ No se pudo copiar el link";
+  }
 }
 
 loadCount();
+loadMyReferralInfo();

@@ -1,27 +1,36 @@
-body{
-
-font-family: Arial;
-text-align:center;
-background:#0f1a12;
-color:white;
-padding:40px;
-
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #071b10;
+  color: white;
+  padding: 32px 20px;
 }
 
-button{
-
-padding:15px 25px;
-font-size:18px;
-border:none;
-border-radius:10px;
-background:#4CAF50;
-color:white;
-cursor:pointer;
-
+h1, h2, h3, p {
+  margin: 10px 0;
 }
 
-button:hover{
+button {
+  padding: 14px 22px;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
 
-background:#45a049;
+button:hover {
+  background: #45a049;
+}
 
+#status {
+  margin-top: 14px;
+  min-height: 24px;
+}
+
+#refLink {
+  font-size: 14px;
+  opacity: 0.9;
 }
