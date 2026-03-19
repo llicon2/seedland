@@ -1,9 +1,9 @@
 body {
   font-family: Arial, sans-serif;
   text-align: center;
-  background: #071b10;
+  background: #061a10;
   color: white;
-  padding: 32px 20px;
+  padding: 30px 20px;
 }
 
 h1, h2, h3, p {
@@ -25,6 +25,11 @@ button:hover {
   background: #45a049;
 }
 
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 #status {
   margin-top: 14px;
   min-height: 24px;
@@ -33,4 +38,37 @@ button:hover {
 #refLink {
   font-size: 14px;
   opacity: 0.9;
+}
+
+#rewardsBox,
+#myItems {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.reward-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.reward-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.reward-sub {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+#nextReward {
+  margin-top: 18px;
+  font-weight: bold;
+  color: #ffd166;
 }

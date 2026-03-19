@@ -15,6 +15,7 @@ const countEl = document.getElementById("count");
 const myRefCountEl = document.getElementById("myRefCount");
 const refLinkEl = document.getElementById("refLink");
 const nextRewardEl = document.getElementById("nextReward");
+const myItemsEl = document.getElementById("myItems");
 
 btn.addEventListener("click", preregister);
 copyRefBtn.addEventListener("click", copyReferralLink);
@@ -35,6 +36,33 @@ function getReferrerIdFromUrl() {
 
 function getReferralLink(userId) {
   return `https://t.me/seedlands_bot?start=${userId}`;
+}
+
+function getNextReward(refCount) {
+  if (refCount < 3) return "Invita 3 amigos para ganar 🐦 Radar de Cuervos x1";
+  if (refCount < 5) return "Invita 5 amigos para ganar 🦊 Rastreador de Zorros x1";
+  if (refCount < 10) return "Invita 10 amigos para ganar 🛡️ Espantapájaros (12h)";
+  if (refCount < 20) return "Invita 20 amigos para ganar 🐺 Espanta Zorros (12h)";
+  return "🎉 Has desbloqueado todas las recompensas del preregistro";
+}
+
+function getMilestoneRewards(refCount) {
+  const rewards = [];
+
+  if (refCount >= 3) rewards.push({ milestone: 3, item_key: "crow_radar", quantity: 1 });
+  if (refCount >= 5) rewards.push({ milestone: 5, item_key: "fox_tracker", quantity: 1 });
+  if (refCount >= 10) rewards.push({ milestone: 10, item_key: "scarecrow_12h", quantity: 1 });
+  if (refCount >= 20) rewards.push({ milestone: 20, item_key: "fox_repellent_12h", quantity: 1 });
+
+  return rewards;
+}
+
+function getItemLabel(itemKey) {
+  if (itemKey === "crow_radar") return "🐦 Radar de Cuervos x1";
+  if (itemKey === "fox_tracker") return "🦊 Rastreador de Zorros x1";
+  if (itemKey === "scarecrow_12h") return "🛡️ Espantapájaros (12h)";
+  if (itemKey === "fox_repellent_12h") return "🐺 Espanta Zorros (12h)";
+  return itemKey;
 }
 
 async function preregister() {
@@ -68,14 +96,11 @@ async function preregister() {
     let referredByValue = null;
 
     if (isNewPlayer) {
-      if (
-        referrerId &&
-        referrerId !== myTelegramId
-      ) {
+      if (referrerId && referrerId !== myTelegramId) {
         referredByValue = referrerId;
       }
     } else {
-      referredByValue = existingPlayer.referred_by ?? null;
+      referredByValue = existingPlayer?.referred_by ?? null;
     }
 
     const { error: upsertError } = await sb
@@ -98,37 +123,84 @@ async function preregister() {
     }
 
     if (isNewPlayer && referredByValue) {
-      const { data: referrerData, error: referrerFetchError } = await sb
-        .from("players")
-        .select("referrals_count")
-        .eq("telegram_id", referredByValue)
+      const { data: existingReferral, error: checkReferralError } = await sb
+        .from("referrals")
+        .select("id")
+        .eq("referred_id", myTelegramId)
         .maybeSingle();
 
-      if (referrerFetchError) {
-        console.log("ERROR OBTENIENDO INVITADOR:", referrerFetchError);
-      } else if (referrerData) {
-        const currentCount = referrerData.referrals_count || 0;
+      if (checkReferralError) {
+        console.log("ERROR REVISANDO REFERIDO:", checkReferralError);
+      } else if (!existingReferral) {
+        const { error: refInsertError } = await sb
+          .from("referrals")
+          .insert({
+            referrer_id: referredByValue,
+            referred_id: myTelegramId
+          });
 
-        const { error: updateRefError } = await sb
-          .from("players")
-          .update({
-            referrals_count: currentCount + 1
-          })
-          .eq("telegram_id", referredByValue);
-
-        if (updateRefError) {
-          console.log("ERROR ACTUALIZANDO REFERIDOS:", updateRefError);
+        if (refInsertError) {
+          console.log("ERROR GUARDANDO REFERIDO:", refInsertError);
         }
       }
     }
 
+    await grantReferralRewards(myTelegramId);
+
     statusEl.innerText = "✅ Preregistro completado";
+
+    btn.innerText = "✅ Ya estás preregistrado";
+    btn.disabled = true;
 
     await loadCount();
     await loadMyReferralInfo();
+    await loadMyItems();
   } catch (err) {
     console.log("ERROR GENERAL:", err);
     statusEl.innerText = "❌ Error inesperado";
+  }
+}
+
+async function grantReferralRewards(playerId) {
+  const { count, error: countError } = await sb
+    .from("referrals")
+    .select("*", { count: "exact", head: true })
+    .eq("referrer_id", playerId);
+
+  if (countError) {
+    console.log("ERROR CONTANDO REFERIDOS:", countError);
+    return;
+  }
+
+  const refCount = count ?? 0;
+  const rewardsToGrant = getMilestoneRewards(refCount);
+
+  for (const reward of rewardsToGrant) {
+    const { data: existingItem, error: existingItemError } = await sb
+      .from("player_items")
+      .select("id")
+      .eq("player_id", playerId)
+      .eq("item_key", reward.item_key)
+      .maybeSingle();
+
+    if (existingItemError) {
+      console.log("ERROR REVISANDO ITEM:", existingItemError);
+      continue;
+    }
+
+    if (!existingItem) {
+      const { error: insertItemError } = await sb
+        .from("player_items")
+        .insert({
+          player_id: playerId,
+          item_key: reward.item_key,
+          quantity: reward.quantity
+        });
+
+      if (insertItemError) {
+        console.log("ERROR ENTREGANDO RECOMPENSA:", insertItemError);
+      }
+    }
   }
 }
 
@@ -159,21 +231,51 @@ async function loadMyReferralInfo() {
 
   refLinkEl.innerText = getReferralLink(myTelegramId);
 
-  const { data, error } = await sb
-    .from("players")
-    .select("referrals_count")
-    .eq("telegram_id", myTelegramId)
-    .maybeSingle();
+  const { count, error } = await sb
+    .from("referrals")
+    .select("*", { count: "exact", head: true })
+    .eq("referrer_id", myTelegramId);
 
   if (error) {
     console.log("ERROR MIS REFERIDOS:", error);
     return;
   }
 
-  const refCount = data?.referrals_count ?? 0;
+  const refCount = count ?? 0;
 
   myRefCountEl.innerText = refCount;
   nextRewardEl.innerText = getNextReward(refCount);
+}
+
+async function loadMyItems() {
+  const user = getTelegramUser();
+
+  if (!user) {
+    myItemsEl.innerHTML = "";
+    return;
+  }
+
+  const myTelegramId = Number(user.id);
+
+  const { data, error } = await sb
+    .from("player_items")
+    .select("item_key, quantity")
+    .eq("player_id", myTelegramId)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.log("ERROR CARGANDO ITEMS:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    myItemsEl.innerHTML = "<p>Aún no has desbloqueado recompensas.</p>";
+    return;
+  }
+
+  myItemsEl.innerHTML = data
+    .map(item => `<div class="reward-card">${getItemLabel(item.item_key)}</div>`)
+    .join("");
 }
 
 async function copyReferralLink() {
@@ -194,13 +296,31 @@ async function copyReferralLink() {
     statusEl.innerText = "❌ No se pudo copiar el link";
   }
 }
-function getNextReward(refCount) {
-  if (refCount < 3) return "Invita 3 amigos para ganar 🐦 Radar de Cuervos";
-  if (refCount < 5) return "Invita 5 amigos para ganar 🦊 Rastreador de Zorros";
-  if (refCount < 10) return "Invita 10 amigos para ganar 🛡️ Espantapájaros (12h)";
-  if (refCount < 20) return "Invita 20 amigos para ganar 🐺 Espanta Zorros (12h)";
-  return "🎉 Has desbloqueado todas las recompensas";
+
+async function init() {
+  const user = getTelegramUser();
+
+  await loadCount();
+  await loadMyReferralInfo();
+  await loadMyItems();
+
+  if (!user) return;
+
+  const myTelegramId = Number(user.id);
+
+  const { data, error } = await sb
+    .from("players")
+    .select("telegram_id")
+    .eq("telegram_id", myTelegramId)
+    .maybeSingle();
+
+  if (!error && data) {
+    btn.innerText = "✅ Ya estás preregistrado";
+    btn.disabled = true;
+  }
+
+  await grantReferralRewards(myTelegramId);
+  await loadMyItems();
 }
 
-loadCount();
-loadMyReferralInfo();
+init();
