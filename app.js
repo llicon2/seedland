@@ -14,6 +14,7 @@ const statusEl = document.getElementById("status");
 const countEl = document.getElementById("count");
 const myRefCountEl = document.getElementById("myRefCount");
 const refLinkEl = document.getElementById("refLink");
+const nextRewardEl = document.getElementById("nextReward");
 
 btn.addEventListener("click", preregister);
 copyRefBtn.addEventListener("click", copyReferralLink);
@@ -150,6 +151,7 @@ async function loadMyReferralInfo() {
   if (!user) {
     myRefCountEl.innerText = "0";
     refLinkEl.innerText = "";
+    nextRewardEl.innerText = "";
     return;
   }
 
@@ -168,7 +170,10 @@ async function loadMyReferralInfo() {
     return;
   }
 
-  myRefCountEl.innerText = data?.referrals_count ?? 0;
+  const refCount = data?.referrals_count ?? 0;
+
+  myRefCountEl.innerText = refCount;
+  nextRewardEl.innerText = getNextReward(refCount);
 }
 
 async function copyReferralLink() {
@@ -188,6 +193,13 @@ async function copyReferralLink() {
     console.log("ERROR COPIANDO LINK:", err);
     statusEl.innerText = "❌ No se pudo copiar el link";
   }
+}
+function getNextReward(refCount) {
+  if (refCount < 3) return "Invita 3 amigos para ganar 🐦 Radar de Cuervos";
+  if (refCount < 5) return "Invita 5 amigos para ganar 🦊 Rastreador de Zorros";
+  if (refCount < 10) return "Invita 10 amigos para ganar 🛡️ Espantapájaros (12h)";
+  if (refCount < 20) return "Invita 20 amigos para ganar 🐺 Espanta Zorros (12h)";
+  return "🎉 Has desbloqueado todas las recompensas";
 }
 
 loadCount();
