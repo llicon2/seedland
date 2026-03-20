@@ -60,11 +60,19 @@ function getMilestoneRewards(refCount) {
 }
 
 function getItemLabel(itemKey) {
-  if (itemKey === "crow_radar") return "🐦 Radar de Cuervos x1";
-  if (itemKey === "fox_tracker") return "🦊 Rastreador de Zorros x1";
-  if (itemKey === "scarecrow_12h") return "🛡️ Espantapájaros (12h)";
-  if (itemKey === "fox_repellent_12h") return "🐺 Espanta Zorros (12h)";
+  if (itemKey === "crow_radar") return "Radar de Cuervos x1";
+  if (itemKey === "fox_tracker") return "Rastreador de Zorros x1";
+  if (itemKey === "scarecrow_12h") return "Espantapájaros (12h)";
+  if (itemKey === "fox_repellent_12h") return "Espanta Zorros (12h)";
   return itemKey;
+}
+
+function getItemImage(itemKey) {
+  if (itemKey === "crow_radar") return "images/crow-radar.png";
+  if (itemKey === "fox_tracker") return "images/fox-tracker.png";
+  if (itemKey === "scarecrow_12h") return "images/scarecrow.png";
+  if (itemKey === "fox_repellent_12h") return "images/fox-repellent.png";
+  return "";
 }
 
 async function preregister() {
@@ -307,13 +315,16 @@ async function loadMyItems() {
     return;
   }
 
-  myItemsEl.innerHTML = data
-    .map(item => `
-      <div class="reward-card">
+myItemsEl.innerHTML = data
+  .map(item => `
+    <div class="reward-card">
+      <img src="${getItemImage(item.item_key)}" alt="${getItemLabel(item.item_key)}" class="reward-icon">
+      <div class="reward-info">
         <div class="reward-title">${getItemLabel(item.item_key)}</div>
       </div>
-    `)
-    .join("");
+    </div>
+  `)
+  .join("");
 }
 
 async function copyReferralLink() {

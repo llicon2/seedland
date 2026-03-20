@@ -51,20 +51,39 @@ button:disabled {
 #myItems {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-width: 420px;
+  gap: 12px;
+  max-width: 480px;
   margin: 0 auto;
 }
 
 .reward-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 12px;
   padding: 12px;
+  text-align: left;
+}
+
+.reward-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  flex-shrink: 0;
+}
+
+.reward-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .reward-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
 }
 
