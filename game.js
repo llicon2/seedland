@@ -8,6 +8,11 @@ const tg = window.Telegram.WebApp;
 
 tg.ready();
 
+/* =========================
+   DEBUG PARA MOVER SLOTS
+========================= */
+const DEBUG_MOVE_SLOTS = true;
+
 const welcomeText = document.getElementById("welcomeText");
 const coinsText = document.getElementById("coinsText");
 const seedCountText = document.getElementById("seedCountText");
@@ -37,17 +42,14 @@ let currentSeedPrice = 10;
 
 const SLOT_UNLOCK_COSTS = [0, 20, 40, 70, 110, 160, 230, 320, 450];
 
-/* posiciones encima de la tierra de tu imagen */
+/* posiciones base */
 const SLOT_POSITIONS = {
   1: { x: 27, y: 51 },
-
   2: { x: 41, y: 44 },
-  3: { x: 75, y: 70 },
-
+  3: { x: 62, y: 44 },
   4: { x: 31, y: 55 },
   5: { x: 50, y: 55 },
   6: { x: 69, y: 55 },
-
   7: { x: 38, y: 65 },
   8: { x: 50, y: 72 },
   9: { x: 62, y: 65 }
@@ -332,13 +334,68 @@ function getPlantIcon(plantType) {
   return plant?.icon || "🌱";
 }
 
+/* ========= DRAG DEBUG ========= */
+function enableDebugDrag(slotElement, slotId) {
+  if (!DEBUG_MOVE_SLOTS) return;
+
+  let isDragging = false;
+
+  const onPointerMove = (e) => {
+    if (!isDragging) return;
+
+    const rect = slotsLayer.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    const xRounded = Math.max(0, Math.min(100, Math.round(x)));
+    const yRounded = Math.max(0, Math.min(100, Math.round(y)));
+
+    slotElement.style.left = `${xRounded}%`;
+    slotElement.style.top = `${yRounded}%`;
+
+    gameStatus.innerText = `Moviendo slot ${slotId} → x:${xRounded}, y:${yRounded}`;
+  };
+
+  const onPointerUp = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const rect = slotsLayer.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    const xRounded = Math.max(0, Math.min(100, Math.round(x)));
+    const yRounded = Math.max(0, Math.min(100, Math.round(y)));
+
+    console.log(`SLOT ${slotId}: { x: ${xRounded}, y: ${yRounded} }`);
+    console.log(`${slotId}: { x: ${xRounded}, y: ${yRounded} },`);
+
+    gameStatus.innerText = `Slot ${slotId} listo → ${slotId}: { x: ${xRounded}, y: ${yRounded} },`;
+  };
+
+  slotElement.addEventListener("pointerdown", (e) => {
+    if (!DEBUG_MOVE_SLOTS) return;
+    e.preventDefault();
+    isDragging = true;
+    slotElement.setPointerCapture?.(e.pointerId);
+  });
+
+  document.addEventListener("pointermove", onPointerMove);
+  document.addEventListener("pointerup", onPointerUp);
+}
+
 function renderSlots() {
   slotsLayer.innerHTML = "";
 
   currentSlots.forEach(slot => {
     const pos = SLOT_POSITIONS[slot.slot_index];
     const button = document.createElement("button");
+    button.type = "button";
     button.classList.add("slot-spot");
+
+    if (DEBUG_MOVE_SLOTS) {
+      button.style.cursor = "move";
+    }
 
     if (selectedSlot && selectedSlot.slot_index === slot.slot_index) {
       button.classList.add("selected");
@@ -380,6 +437,7 @@ function renderSlots() {
       renderSlots();
     });
 
+    enableDebugDrag(button, slot.slot_index);
     slotsLayer.appendChild(button);
   });
 
