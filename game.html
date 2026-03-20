@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SeedLand Game</title>
+  <link rel="stylesheet" href="game.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>🌱 SeedLand</h1>
+    <p id="welcomeText">Cargando jugador...</p>
+  </div>
+
+  <div class="section">
+    <h2>Tu parcela</h2>
+
+    <div id="plotCard" class="slot-card empty">
+      <div class="slot-visual" id="plotVisual">🟫</div>
+      <div class="slot-info">
+        <h3 id="plotTitle">Slot de parcela vacío</h3>
+        <p id="plotDesc">Necesitas comprar una parcela para comenzar.</p>
+      </div>
+    </div>
+
+    <button id="buyPlotBtn">🛒 Comprar parcela</button>
+    <p id="plotStatus"></p>
+  </div>
+
+  <div class="section">
+    <h2>Tu semilla</h2>
+
+    <div id="seedCard" class="slot-card locked">
+      <div class="slot-visual">🌰</div>
+      <div class="slot-info">
+        <h3>Slot de semilla bloqueado</h3>
+        <p>Primero debes tener una parcela.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

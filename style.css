@@ -98,3 +98,18 @@ button:disabled {
   font-weight: bold;
   color: #ffd166;
 }
+
+.game-link-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 14px 22px;
+  background: #ffd166;
+  color: #1b1b1b;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.game-link-btn:hover {
+  opacity: 0.92;
+}
