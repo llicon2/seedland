@@ -3,6 +3,7 @@ console.log("APP INICIADA");
 const SUPABASE_URL = "https://lvtpsqoqywoxrvbqfycd.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dHBzcW9xeXdveHJ2YnFmeWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNDg1ODEsImV4cCI6MjA4ODkyNDU4MX0.AiHAyOS3zZrX3R1gPhp6GlXDOI5RO6eEF1lnLv0tnCU";
 
+
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const tg = window.Telegram.WebApp;
 
@@ -16,6 +17,7 @@ const myRefCountEl = document.getElementById("myRefCount");
 const refLinkEl = document.getElementById("refLink");
 const nextRewardEl = document.getElementById("nextReward");
 const myItemsEl = document.getElementById("myItems");
+const invitedByEl = document.getElementById("invitedBy");
 
 btn.addEventListener("click", preregister);
 copyRefBtn.addEventListener("click", copyReferralLink);
@@ -49,10 +51,10 @@ function getNextReward(refCount) {
 function getMilestoneRewards(refCount) {
   const rewards = [];
 
-  if (refCount >= 3) rewards.push({ milestone: 3, item_key: "crow_radar", quantity: 1 });
-  if (refCount >= 5) rewards.push({ milestone: 5, item_key: "fox_tracker", quantity: 1 });
-  if (refCount >= 10) rewards.push({ milestone: 10, item_key: "scarecrow_12h", quantity: 1 });
-  if (refCount >= 20) rewards.push({ milestone: 20, item_key: "fox_repellent_12h", quantity: 1 });
+  if (refCount >= 3) rewards.push({ item_key: "crow_radar", quantity: 1 });
+  if (refCount >= 5) rewards.push({ item_key: "fox_tracker", quantity: 1 });
+  if (refCount >= 10) rewards.push({ item_key: "scarecrow_12h", quantity: 1 });
+  if (refCount >= 20) rewards.push({ item_key: "fox_repellent_12h", quantity: 1 });
 
   return rewards;
 }
@@ -91,16 +93,14 @@ async function preregister() {
       return;
     }
 
-    const isNewPlayer = !existingPlayer;
+    let referredByValue = existingPlayer?.referred_by ?? null;
 
-    let referredByValue = null;
-
-    if (isNewPlayer) {
-      if (referrerId && referrerId !== myTelegramId) {
-        referredByValue = referrerId;
-      }
-    } else {
-      referredByValue = existingPlayer?.referred_by ?? null;
+    if (
+      referrerId &&
+      referrerId !== myTelegramId &&
+      !referredByValue
+    ) {
+      referredByValue = referrerId;
     }
 
     const { error: upsertError } = await sb
@@ -122,7 +122,7 @@ async function preregister() {
       return;
     }
 
-    if (isNewPlayer && referredByValue) {
+    if (referredByValue && (!existingPlayer || !existingPlayer.referred_by)) {
       const { data: existingReferral, error: checkReferralError } = await sb
         .from("referrals")
         .select("id")
@@ -148,7 +148,6 @@ async function preregister() {
     await grantReferralRewards(myTelegramId);
 
     statusEl.innerText = "✅ Preregistro completado";
-
     btn.innerText = "✅ Ya estás preregistrado";
     btn.disabled = true;
 
@@ -224,13 +223,11 @@ async function loadMyReferralInfo() {
     myRefCountEl.innerText = "0";
     refLinkEl.innerText = "";
     nextRewardEl.innerText = "";
+    invitedByEl.innerText = "";
     return;
   }
 
   const myTelegramId = Number(user.id);
-  const referrerId = getReferrerIdFromUrl();
-
-  debugRefEl.innerText = `Mi ID: ${myTelegramId} | Ref recibido: ${referrerId ?? "ninguno"}`;
 
   refLinkEl.innerText = getReferralLink(myTelegramId);
 
@@ -245,11 +242,44 @@ async function loadMyReferralInfo() {
   }
 
   const refCount = count ?? 0;
-
   myRefCountEl.innerText = refCount;
   nextRewardEl.innerText = getNextReward(refCount);
-}
 
+  const { data: meData, error: meError } = await sb
+    .from("players")
+    .select("referred_by")
+    .eq("telegram_id", myTelegramId)
+    .maybeSingle();
+
+  if (meError) {
+    console.log("ERROR CARGANDO REFERIDO POR:", meError);
+    invitedByEl.innerText = "";
+    return;
+  }
+
+  if (!meData?.referred_by) {
+    invitedByEl.innerText = "";
+    return;
+  }
+
+  const { data: referrerData, error: referrerError } = await sb
+    .from("players")
+    .select("name")
+    .eq("telegram_id", meData.referred_by)
+    .maybeSingle();
+
+  if (referrerError) {
+    console.log("ERROR CARGANDO NOMBRE DEL INVITADOR:", referrerError);
+    invitedByEl.innerText = "";
+    return;
+  }
+
+  if (referrerData?.name) {
+    invitedByEl.innerText = `👤 Invitado por: ${referrerData.name}`;
+  } else {
+    invitedByEl.innerText = "";
+  }
+}
 
 async function loadMyItems() {
   const user = getTelegramUser();
@@ -278,7 +308,11 @@ async function loadMyItems() {
   }
 
   myItemsEl.innerHTML = data
-    .map(item => `<div class="reward-card">${getItemLabel(item.item_key)}</div>`)
+    .map(item => `
+      <div class="reward-card">
+        <div class="reward-title">${getItemLabel(item.item_key)}</div>
+      </div>
+    `)
     .join("");
 }
 

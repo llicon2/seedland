@@ -35,6 +35,13 @@ button:disabled {
   min-height: 24px;
 }
 
+#invitedBy {
+  margin-top: 8px;
+  font-weight: bold;
+  color: #ffd166;
+  min-height: 20px;
+}
+
 #refLink {
   font-size: 14px;
   opacity: 0.9;
