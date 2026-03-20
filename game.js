@@ -39,10 +39,11 @@ let currentPlayerName = "Jugador";
 let selectedSlot = null;
 let currentSlots = [];
 let currentSeedPrice = 10;
+let isDraggingAnySlot = false;
 
 const SLOT_UNLOCK_COSTS = [0, 20, 40, 70, 110, 160, 230, 320, 450];
 
-/* posiciones base */
+/* POSICIONES BASE */
 const SLOT_POSITIONS = {
   1: { x: 27, y: 51 },
   2: { x: 41, y: 44 },
@@ -54,6 +55,9 @@ const SLOT_POSITIONS = {
   8: { x: 50, y: 72 },
   9: { x: 62, y: 65 }
 };
+
+/* ESTE OBJETO SÍ SE ACTUALIZA AL ARRASTRAR */
+const liveSlotPositions = JSON.parse(JSON.stringify(SLOT_POSITIONS));
 
 const PLANT_POOL = [
   { key: "sprout", name: "Brote Verde", rarity: "Común", rate: 1, cycle: 30, icon: "🌱", chance: 25 },
@@ -334,7 +338,6 @@ function getPlantIcon(plantType) {
   return plant?.icon || "🌱";
 }
 
-/* ========= DRAG DEBUG ========= */
 function enableDebugDrag(slotElement, slotId) {
   if (!DEBUG_MOVE_SLOTS) return;
 
@@ -350,33 +353,33 @@ function enableDebugDrag(slotElement, slotId) {
     const xRounded = Math.max(0, Math.min(100, Math.round(x)));
     const yRounded = Math.max(0, Math.min(100, Math.round(y)));
 
+    liveSlotPositions[slotId] = { x: xRounded, y: yRounded };
+
     slotElement.style.left = `${xRounded}%`;
     slotElement.style.top = `${yRounded}%`;
 
     gameStatus.innerText = `Moviendo slot ${slotId} → x:${xRounded}, y:${yRounded}`;
+    isDraggingAnySlot = true;
   };
 
-  const onPointerUp = (e) => {
+  const onPointerUp = () => {
     if (!isDragging) return;
     isDragging = false;
+    isDraggingAnySlot = false;
 
-    const rect = slotsLayer.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const pos = liveSlotPositions[slotId];
+    console.log(`SLOT ${slotId}: { x: ${pos.x}, y: ${pos.y} }`);
+    console.log(`${slotId}: { x: ${pos.x}, y: ${pos.y} },`);
 
-    const xRounded = Math.max(0, Math.min(100, Math.round(x)));
-    const yRounded = Math.max(0, Math.min(100, Math.round(y)));
-
-    console.log(`SLOT ${slotId}: { x: ${xRounded}, y: ${yRounded} }`);
-    console.log(`${slotId}: { x: ${xRounded}, y: ${yRounded} },`);
-
-    gameStatus.innerText = `Slot ${slotId} listo → ${slotId}: { x: ${xRounded}, y: ${yRounded} },`;
+    gameStatus.innerText = `Guardado visual slot ${slotId} → ${slotId}: { x: ${pos.x}, y: ${pos.y} },`;
   };
 
   slotElement.addEventListener("pointerdown", (e) => {
     if (!DEBUG_MOVE_SLOTS) return;
     e.preventDefault();
+    e.stopPropagation();
     isDragging = true;
+    isDraggingAnySlot = true;
     slotElement.setPointerCapture?.(e.pointerId);
   });
 
@@ -388,7 +391,7 @@ function renderSlots() {
   slotsLayer.innerHTML = "";
 
   currentSlots.forEach(slot => {
-    const pos = SLOT_POSITIONS[slot.slot_index];
+    const pos = liveSlotPositions[slot.slot_index] || SLOT_POSITIONS[slot.slot_index];
     const button = document.createElement("button");
     button.type = "button";
     button.classList.add("slot-spot");
@@ -401,10 +404,11 @@ function renderSlots() {
       button.classList.add("selected");
     }
 
+    button.style.left = `${pos.x}%`;
+    button.style.top = `${pos.y}%`;
+
     if (!slot.is_unlocked) {
       button.classList.add("locked");
-      button.style.left = `${pos.x}%`;
-      button.style.top = `${pos.y}%`;
       button.innerHTML = `
         <div class="slot-inner">
           <div class="slot-lock">🔒</div>
@@ -413,16 +417,10 @@ function renderSlots() {
       `;
     } else if (!slot.plant_type) {
       button.classList.add("empty");
-      button.style.left = `${pos.x}%`;
-      button.style.top = `${pos.y}%`;
-      button.innerHTML = `
-        <div class="slot-inner"></div>
-      `;
+      button.innerHTML = `<div class="slot-inner"></div>`;
     } else {
       const pending = getPendingProduction(slot);
       button.classList.add(pending > 0 ? "ready" : "planted");
-      button.style.left = `${pos.x}%`;
-      button.style.top = `${pos.y}%`;
       button.innerHTML = `
         <div class="slot-inner">
           <div class="slot-plant">${getPlantIcon(slot.plant_type)}</div>
@@ -432,6 +430,7 @@ function renderSlots() {
     }
 
     button.addEventListener("click", () => {
+      if (isDraggingAnySlot) return;
       selectedSlot = slot;
       updateSelectedSlotPanel();
       renderSlots();
@@ -636,12 +635,14 @@ async function initGame() {
   await loadSeedShop();
   await loadSlots();
 
-  setInterval(() => {
-    if (tabFarm.classList.contains("active")) {
-      updateSelectedSlotPanel();
-      renderSlots();
-    }
-  }, 1000);
+  if (!DEBUG_MOVE_SLOTS) {
+    setInterval(() => {
+      if (tabFarm.classList.contains("active")) {
+        updateSelectedSlotPanel();
+        renderSlots();
+      }
+    }, 1000);
+  }
 }
 
 initGame();
