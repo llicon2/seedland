@@ -39,7 +39,7 @@ const SLOT_UNLOCK_COSTS = [0, 20, 40, 70, 110, 160, 230, 320, 450];
 
 /* posiciones encima de la tierra de tu imagen */
 const SLOT_POSITIONS = {
-  1: { x: 28, y: 50 },
+  1: { x: 27, y: 49 },
 
   2: { x: 41, y: 44 },
   3: { x: 62, y: 44 },
