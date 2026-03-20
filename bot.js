@@ -3,7 +3,6 @@ const { Telegraf, Markup } = require("telegraf");
 const bot = new Telegraf("8789097060:AAGkNVDV024mQENWh4cjgeaFTNrvvyXTTnw");
 
 bot.start((ctx) => {
-bot.start((ctx) => {
   const text = ctx.message?.text || "";
   const parts = text.split(" ");
   const payload = parts.length > 1 ? parts[1].trim() : "";
