@@ -18,7 +18,7 @@ const remainingSeedsText = document.getElementById("remainingSeedsText");
 const seedPriceText = document.getElementById("seedPriceText");
 const buySeedBtn = document.getElementById("buySeedBtn");
 
-const slotsGrid = document.getElementById("slotsGrid");
+const slotsLayer = document.getElementById("slotsLayer");
 const slotInfoTitle = document.getElementById("slotInfoTitle");
 const slotInfoDesc = document.getElementById("slotInfoDesc");
 const slotActionBtn = document.getElementById("slotActionBtn");
@@ -36,6 +36,19 @@ let currentSlots = [];
 let currentSeedPrice = 10;
 
 const SLOT_UNLOCK_COSTS = [0, 20, 40, 70, 110, 160, 230, 320, 450];
+
+/* posiciones encima de la tierra de tu imagen */
+const SLOT_POSITIONS = {
+  1: { x: 50, y: 31 },
+  2: { x: 34, y: 42 },
+  3: { x: 66, y: 42 },
+  4: { x: 27, y: 55 },
+  5: { x: 50, y: 55 },
+  6: { x: 73, y: 55 },
+  7: { x: 34, y: 68 },
+  8: { x: 50, y: 80 },
+  9: { x: 66, y: 68 }
+};
 
 const PLANT_POOL = [
   { key: "sprout", name: "Brote Verde", rarity: "Común", rate: 1, cycle: 30, icon: "🌱", chance: 25 },
@@ -311,12 +324,18 @@ async function loadSlots() {
   renderSlots();
 }
 
+function getPlantIcon(plantType) {
+  const plant = PLANT_POOL.find(p => p.name === plantType);
+  return plant?.icon || "🌱";
+}
+
 function renderSlots() {
-  slotsGrid.innerHTML = "";
+  slotsLayer.innerHTML = "";
 
   currentSlots.forEach(slot => {
+    const pos = SLOT_POSITIONS[slot.slot_index];
     const button = document.createElement("button");
-    button.classList.add("slot");
+    button.classList.add("slot-spot");
 
     if (selectedSlot && selectedSlot.slot_index === slot.slot_index) {
       button.classList.add("selected");
@@ -324,31 +343,31 @@ function renderSlots() {
 
     if (!slot.is_unlocked) {
       button.classList.add("locked");
+      button.style.left = `${pos.x}%`;
+      button.style.top = `${pos.y}%`;
       button.innerHTML = `
-        <span class="slot-icon">🔒</span>
-        <div class="slot-name">Slot ${slot.slot_index}</div>
-        <div class="slot-sub">${getSlotUnlockCost(slot.slot_index)} monedas</div>
+        <div class="slot-inner">
+          <div class="slot-lock">🔒</div>
+          <div class="slot-cost">${getSlotUnlockCost(slot.slot_index)} 💎</div>
+        </div>
       `;
     } else if (!slot.plant_type) {
       button.classList.add("empty");
+      button.style.left = `${pos.x}%`;
+      button.style.top = `${pos.y}%`;
       button.innerHTML = `
-        <span class="slot-icon">🟫</span>
-        <div class="slot-name">Vacío</div>
-        <div class="slot-sub">Listo para plantar</div>
+        <div class="slot-inner"></div>
       `;
     } else {
       const pending = getPendingProduction(slot);
-
-      if (pending > 0) {
-        button.classList.add("ready");
-      } else {
-        button.classList.add("planted");
-      }
-
+      button.classList.add(pending > 0 ? "ready" : "planted");
+      button.style.left = `${pos.x}%`;
+      button.style.top = `${pos.y}%`;
       button.innerHTML = `
-        <span class="slot-icon">${getPlantIcon(slot.plant_type)}</span>
-        <div class="slot-name">${slot.plant_type}</div>
-        <div class="slot-sub">${slot.plant_rarity} · +${pending}</div>
+        <div class="slot-inner">
+          <div class="slot-plant">${getPlantIcon(slot.plant_type)}</div>
+          <div class="slot-badge">+${pending}</div>
+        </div>
       `;
     }
 
@@ -358,7 +377,7 @@ function renderSlots() {
       renderSlots();
     });
 
-    slotsGrid.appendChild(button);
+    slotsLayer.appendChild(button);
   });
 
   if (!selectedSlot && currentSlots.length > 0) {
@@ -366,11 +385,6 @@ function renderSlots() {
     updateSelectedSlotPanel();
     renderSlots();
   }
-}
-
-function getPlantIcon(plantType) {
-  const plant = PLANT_POOL.find(p => p.name === plantType);
-  return plant?.icon || "🌱";
 }
 
 function updateSelectedSlotPanel() {
@@ -561,7 +575,7 @@ async function initGame() {
   await loadSeedShop();
   await loadSlots();
 
-  setInterval(async () => {
+  setInterval(() => {
     if (tabFarm.classList.contains("active")) {
       updateSelectedSlotPanel();
       renderSlots();

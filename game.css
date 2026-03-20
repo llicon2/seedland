@@ -60,81 +60,110 @@ body {
   display: block;
 }
 
-.farm-board-wrap {
+/* PARCELA REAL */
+.farm-scene {
   display: flex;
   justify-content: center;
   margin-bottom: 18px;
 }
 
 .farm-board {
+  position: relative;
   width: 100%;
   max-width: 430px;
-  background: rgba(0,0,0,0.14);
-  border-radius: 24px;
-  padding: 18px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+  aspect-ratio: 1 / 1;
+  background-image: url("images/parcela.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
 }
 
-.slots-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+.slots-layer {
+  position: absolute;
+  inset: 0;
 }
 
-.slot {
-  min-height: 100px;
+.slot-spot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 88px;
+  height: 68px;
   border: none;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.12);
-  color: white;
+  background: transparent;
   cursor: pointer;
-  padding: 8px;
-  text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+  border-radius: 16px;
 }
 
-.slot:hover {
-  transform: translateY(-1px);
+.slot-spot.selected {
+  box-shadow: 0 0 0 3px #ffe082;
+  background: rgba(255, 236, 179, 0.10);
 }
 
-.slot.locked {
-  background: rgba(0,0,0,0.18);
+.slot-spot.locked {
+  background: rgba(0, 0, 0, 0.12);
 }
 
-.slot.empty {
-  background: rgba(128, 78, 39, 0.35);
+.slot-spot.empty {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.slot.planted {
-  background: rgba(58, 133, 56, 0.35);
+.slot-spot.planted {
+  background: rgba(87, 189, 91, 0.10);
 }
 
-.slot.ready {
-  background: rgba(255, 204, 92, 0.32);
+.slot-spot.ready {
+  background: rgba(255, 213, 79, 0.18);
 }
 
-.slot.selected {
-  outline: 3px solid #ffe082;
+.slot-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-.slot-icon {
-  font-size: 34px;
-  display: block;
-  margin-bottom: 6px;
+.slot-lock {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 30px;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
 }
 
-.slot-name {
-  font-size: 13px;
-  font-weight: bold;
-  line-height: 1.15;
-}
-
-.slot-sub {
+.slot-cost {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.55);
+  color: white;
+  border-radius: 10px;
   font-size: 11px;
-  opacity: 0.9;
-  margin-top: 4px;
+  padding: 4px 6px;
+  white-space: nowrap;
 }
 
+.slot-plant {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  font-size: 34px;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+}
+
+.slot-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.58);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  padding: 3px 6px;
+}
+
+/* PANEL */
 .info-panel {
   background: rgba(0,0,0,0.18);
   border-radius: 18px;
@@ -177,6 +206,7 @@ body {
   min-height: 24px;
 }
 
+/* TIENDA */
 .shop-card {
   max-width: 420px;
   margin: 0 auto;
@@ -210,6 +240,7 @@ body {
   gap: 6px;
 }
 
+/* MENÚ */
 .bottom-menu {
   position: fixed;
   left: 0;
