@@ -230,7 +230,6 @@ async function handleSeedAction() {
     return;
   }
 
-  // NO TIENE SEMILLA → COMPRAR
   if (!data) {
     const { error: insertSeedError } = await sb
       .from("seeds")
@@ -252,10 +251,9 @@ async function handleSeedAction() {
     return;
   }
 
-  // TIENE SEMILLA SIN PLANTAR → PLANTAR
   if (data.status === "idle") {
     const now = new Date();
-    const ready = new Date(now.getTime() + 30000); // 30 segundos
+    const ready = new Date(now.getTime() + 30000);
 
     const { error: updateSeedError } = await sb
       .from("seeds")
@@ -278,12 +276,36 @@ async function handleSeedAction() {
     return;
   }
 
-  // SI ESTÁ CRECIENDO → REVISAR SI YA SE PUEDE COSECHAR
   if (data.status === "growing") {
     const now = new Date();
     const ready = new Date(data.ready_at);
 
     if (now >= ready) {
+      const { data: playerData, error: playerError } = await sb
+        .from("players")
+        .select("coins")
+        .eq("telegram_id", currentPlayerId)
+        .single();
+
+      if (playerError) {
+        console.log("ERROR OBTENIENDO MONEDAS:", playerError);
+        plotStatus.innerText = "❌ Error obteniendo monedas";
+        return;
+      }
+
+      const newCoins = (playerData?.coins || 0) + 10;
+
+      const { error: updateCoinsError } = await sb
+        .from("players")
+        .update({ coins: newCoins })
+        .eq("telegram_id", currentPlayerId);
+
+      if (updateCoinsError) {
+        console.log("ERROR SUMANDO MONEDAS:", updateCoinsError);
+        plotStatus.innerText = "❌ Error sumando monedas";
+        return;
+      }
+
       const { error: deleteSeedError } = await sb
         .from("seeds")
         .delete()
@@ -295,7 +317,7 @@ async function handleSeedAction() {
         return;
       }
 
-      plotStatus.innerText = "🌾 Cosechado con éxito";
+      plotStatus.innerText = `🌾 Cosechado +10 monedas (Total: ${newCoins})`;
       seedVisual.innerText = "🌰";
       buySeedBtn.innerText = "Comprar semilla";
     } else {
