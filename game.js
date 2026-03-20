@@ -158,12 +158,12 @@ async function buyPlot() {
       status: "owned"
     });
 
-  if (insertError) {
-    console.log("ERROR COMPRANDO PARCELA:", insertError);
-    plotStatus.innerText = "❌ No se pudo comprar la parcela";
-    buyPlotBtn.disabled = false;
-    return;
-  }
+ if (insertError) {
+  console.log("ERROR COMPRANDO PARCELA:", insertError);
+  plotStatus.innerText = "❌ " + insertError.message;
+  buyPlotBtn.disabled = false;
+  return;
+}
 
   plotStatus.innerText = "✅ Parcela comprada con éxito";
   renderOwnedPlot();
