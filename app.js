@@ -16,6 +16,7 @@ const myRefCountEl = document.getElementById("myRefCount");
 const refLinkEl = document.getElementById("refLink");
 const nextRewardEl = document.getElementById("nextReward");
 const myItemsEl = document.getElementById("myItems");
+const debugRefEl = document.getElementById("debugRef");
 
 btn.addEventListener("click", preregister);
 copyRefBtn.addEventListener("click", copyReferralLink);
@@ -224,10 +225,14 @@ async function loadMyReferralInfo() {
     myRefCountEl.innerText = "0";
     refLinkEl.innerText = "";
     nextRewardEl.innerText = "";
+    debugRefEl.innerText = "";
     return;
   }
 
   const myTelegramId = Number(user.id);
+  const referrerId = getReferrerIdFromUrl();
+
+  debugRefEl.innerText = `Mi ID: ${myTelegramId} | Ref recibido: ${referrerId ?? "ninguno"}`;
 
   refLinkEl.innerText = getReferralLink(myTelegramId);
 
@@ -246,6 +251,7 @@ async function loadMyReferralInfo() {
   myRefCountEl.innerText = refCount;
   nextRewardEl.innerText = getNextReward(refCount);
 }
+
 
 async function loadMyItems() {
   const user = getTelegramUser();
