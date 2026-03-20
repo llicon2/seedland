@@ -9,20 +9,125 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 
 const welcomeText = document.getElementById("welcomeText");
-const buyPlotBtn = document.getElementById("buyPlotBtn");
+const coinsText = document.getElementById("coinsText");
+const seedCountText = document.getElementById("seedCountText");
+
+const totalSeedsText = document.getElementById("totalSeedsText");
+const soldSeedsText = document.getElementById("soldSeedsText");
+const remainingSeedsText = document.getElementById("remainingSeedsText");
+const seedPriceText = document.getElementById("seedPriceText");
 const buySeedBtn = document.getElementById("buySeedBtn");
-const plotStatus = document.getElementById("plotStatus");
-const plotVisual = document.getElementById("plotVisual");
-const seedVisual = document.getElementById("seedVisual");
+
+const slotsGrid = document.getElementById("slotsGrid");
+const slotInfoTitle = document.getElementById("slotInfoTitle");
+const slotInfoDesc = document.getElementById("slotInfoDesc");
+const slotActionBtn = document.getElementById("slotActionBtn");
+const gameStatus = document.getElementById("gameStatus");
+
+const tabFarm = document.getElementById("tabFarm");
+const tabSeeds = document.getElementById("tabSeeds");
+const menuFarmBtn = document.getElementById("menuFarmBtn");
+const menuSeedsBtn = document.getElementById("menuSeedsBtn");
 
 let currentPlayerId = null;
 let currentPlayerName = "Jugador";
+let selectedSlot = null;
+let currentSlots = [];
+let currentSeedPrice = 10;
 
-buyPlotBtn.addEventListener("click", buyPlot);
-buySeedBtn.addEventListener("click", handleSeedAction);
+const SLOT_UNLOCK_COSTS = [0, 20, 40, 70, 110, 160, 230, 320, 450];
+
+const PLANT_POOL = [
+  { key: "sprout", name: "Brote Verde", rarity: "Común", rate: 1, cycle: 30, icon: "🌱", chance: 25 },
+  { key: "gold_grass", name: "Hierba Dorada", rarity: "Común", rate: 2, cycle: 35, icon: "🌾", chance: 18 },
+  { key: "blue_daisy", name: "Margarita Azul", rarity: "Común", rate: 2, cycle: 38, icon: "🌼", chance: 12 },
+  { key: "apple_root", name: "Raíz Roja", rarity: "Común", rate: 2, cycle: 40, icon: "🍎", chance: 10 },
+  { key: "water_leaf", name: "Hoja de Agua", rarity: "Común", rate: 3, cycle: 45, icon: "💧", chance: 8 },
+  { key: "gold_wheat", name: "Trigo Dorado", rarity: "Común", rate: 3, cycle: 45, icon: "🌿", chance: 8 },
+  { key: "sunflower", name: "Girasol", rarity: "Común", rate: 3, cycle: 50, icon: "🌻", chance: 7 },
+  { key: "white_flower", name: "Flor Blanca", rarity: "Común", rate: 3, cycle: 50, icon: "🤍", chance: 5 },
+  { key: "root_bulb", name: "Bulbo Raíz", rarity: "Común", rate: 4, cycle: 55, icon: "🥔", chance: 3 },
+  { key: "blue_crystal", name: "Cristal Azul", rarity: "Rara", rate: 6, cycle: 65, icon: "💎", chance: 2 },
+  { key: "rainbow_crystal", name: "Cristal Arcoíris", rarity: "Épica", rate: 10, cycle: 80, icon: "🌈", chance: 1.2 },
+  { key: "pink_lotus", name: "Loto Rosa", rarity: "Legendaria", rate: 14, cycle: 95, icon: "🌸", chance: 0.6 },
+  { key: "mythic_seed", name: "Semilla Mítica", rarity: "Mítica", rate: 22, cycle: 120, icon: "✨", chance: 0.2 }
+];
+
+buySeedBtn.addEventListener("click", buySeed);
+slotActionBtn.addEventListener("click", handleSlotAction);
+menuFarmBtn.addEventListener("click", () => switchTab("farm"));
+menuSeedsBtn.addEventListener("click", () => switchTab("seeds"));
 
 function getTelegramUser() {
   return tg.initDataUnsafe?.user || null;
+}
+
+function switchTab(tabName) {
+  tabFarm.classList.remove("active");
+  tabSeeds.classList.remove("active");
+  menuFarmBtn.classList.remove("active");
+  menuSeedsBtn.classList.remove("active");
+
+  if (tabName === "farm") {
+    tabFarm.classList.add("active");
+    menuFarmBtn.classList.add("active");
+  } else {
+    tabSeeds.classList.add("active");
+    menuSeedsBtn.classList.add("active");
+  }
+}
+
+function getWeightedPlant() {
+  const total = PLANT_POOL.reduce((sum, plant) => sum + plant.chance, 0);
+  let random = Math.random() * total;
+
+  for (const plant of PLANT_POOL) {
+    random -= plant.chance;
+    if (random <= 0) return plant;
+  }
+
+  return PLANT_POOL[0];
+}
+
+function getSlotUnlockCost(slotIndex) {
+  return SLOT_UNLOCK_COSTS[slotIndex - 1] ?? 9999;
+}
+
+function formatSeconds(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+function getPendingProduction(slot) {
+  if (!slot.plant_type || !slot.last_collected_at) return 0;
+
+  const now = Date.now();
+  const last = new Date(slot.last_collected_at).getTime();
+  const cycleMs = (slot.cycle_seconds || 30) * 1000;
+
+  const cycles = Math.floor((now - last) / cycleMs);
+  return Math.max(0, cycles * (slot.production_rate || 0));
+}
+
+async function getPlayerCoins() {
+  const { data, error } = await sb
+    .from("players")
+    .select("coins")
+    .eq("telegram_id", currentPlayerId)
+    .single();
+
+  if (error) return 0;
+  return data?.coins || 0;
+}
+
+async function setPlayerCoins(newCoins) {
+  const { error } = await sb
+    .from("players")
+    .update({ coins: newCoins })
+    .eq("telegram_id", currentPlayerId);
+
+  return !error;
 }
 
 async function loadPlayer() {
@@ -30,15 +135,11 @@ async function loadPlayer() {
 
   if (!user) {
     welcomeText.innerText = "❌ Abre esta app desde Telegram";
-    buyPlotBtn.disabled = true;
-    buySeedBtn.disabled = true;
     return false;
   }
 
   currentPlayerId = Number(user.id);
   currentPlayerName = user.first_name || "Jugador";
-
-  welcomeText.innerText = `Bienvenido, ${currentPlayerName}`;
 
   const { data, error } = await sb
     .from("players")
@@ -46,299 +147,426 @@ async function loadPlayer() {
     .eq("telegram_id", currentPlayerId)
     .maybeSingle();
 
-  if (error) {
-    console.log("ERROR CARGANDO PLAYER:", error);
-    welcomeText.innerText = "❌ Error cargando jugador";
-    buyPlotBtn.disabled = true;
-    buySeedBtn.disabled = true;
-    return false;
-  }
-
-  if (!data) {
+  if (error || !data) {
     welcomeText.innerText = "❌ Primero debes preregistrarte";
-    buyPlotBtn.disabled = true;
-    buySeedBtn.disabled = true;
-    plotStatus.innerText = "Vuelve al preregistro antes de jugar.";
     return false;
   }
 
+  welcomeText.innerText = `Bienvenido, ${currentPlayerName} 👑`;
   return true;
 }
 
-async function loadPlot() {
-  if (!currentPlayerId) return;
-
-  const { data, error } = await sb
-    .from("plots")
-    .select("id, status, created_at")
+async function ensureInventory() {
+  const { data } = await sb
+    .from("player_inventory")
+    .select("player_id")
     .eq("player_id", currentPlayerId)
     .maybeSingle();
-
-  if (error) {
-    console.log("ERROR CARGANDO PARCELA:", error);
-    plotStatus.innerText = "❌ Error cargando parcela";
-    return;
-  }
 
   if (!data) {
-    renderNoPlot();
-    return;
+    await sb.from("player_inventory").insert({
+      player_id: currentPlayerId,
+      seed_count: 0
+    });
+  }
+}
+
+async function ensureSlots() {
+  const { data, error } = await sb
+    .from("farm_slots")
+    .select("slot_index")
+    .eq("player_id", currentPlayerId);
+
+  if (error) return;
+
+  const existing = new Set((data || []).map(row => row.slot_index));
+
+  for (let i = 1; i <= 9; i++) {
+    if (!existing.has(i)) {
+      await sb.from("farm_slots").insert({
+        player_id: currentPlayerId,
+        slot_index: i,
+        is_unlocked: i === 1
+      });
+    }
+  }
+}
+
+async function loadWallet() {
+  const coins = await getPlayerCoins();
+
+  const { data, error } = await sb
+    .from("player_inventory")
+    .select("seed_count")
+    .eq("player_id", currentPlayerId)
+    .single();
+
+  if (!error) {
+    seedCountText.innerText = `🌰 ${data.seed_count || 0}`;
   }
 
-  renderOwnedPlot();
+  coinsText.innerText = `💎 ${coins}`;
 }
 
-function renderNoPlot() {
-  plotVisual.innerText = "🟫";
-  seedVisual.innerText = "🌰";
+async function loadSeedShop() {
+  const { data, error } = await sb
+    .from("game_config")
+    .select("*")
+    .eq("config_key", "main")
+    .single();
 
-  plotStatus.innerText = "Compra tu primera parcela";
+  if (error || !data) return;
 
-  buyPlotBtn.disabled = false;
-  buyPlotBtn.innerText = "Comprar parcela";
+  currentSeedPrice = data.seed_price || 10;
 
-  buySeedBtn.disabled = true;
-  buySeedBtn.innerText = "Comprar semilla";
+  totalSeedsText.innerText = data.total_seeds;
+  soldSeedsText.innerText = data.sold_seeds;
+  remainingSeedsText.innerText = data.total_seeds - data.sold_seeds;
+  seedPriceText.innerText = currentSeedPrice;
 }
 
-function renderOwnedPlot() {
-  plotVisual.innerText = "🌾";
-
-  plotStatus.innerText = "✅ Parcela lista para plantar";
-
-  buyPlotBtn.innerText = "✅ Parcela comprada";
-  buyPlotBtn.disabled = true;
-
-  buySeedBtn.disabled = false;
-}
-
-async function buyPlot() {
+async function buySeed() {
   if (!currentPlayerId) return;
 
-  plotStatus.innerText = "⏳ Comprando parcela...";
-  buyPlotBtn.disabled = true;
+  gameStatus.innerText = "⏳ Comprando semilla...";
 
-  const { data: existingPlot, error: checkError } = await sb
-    .from("plots")
-    .select("id")
+  const { data: config, error: configError } = await sb
+    .from("game_config")
+    .select("*")
+    .eq("config_key", "main")
+    .single();
+
+  if (configError || !config) {
+    gameStatus.innerText = "❌ Error cargando stock de semillas";
+    return;
+  }
+
+  const remaining = config.total_seeds - config.sold_seeds;
+  if (remaining <= 0) {
+    gameStatus.innerText = "❌ No quedan semillas disponibles";
+    return;
+  }
+
+  const coins = await getPlayerCoins();
+  if (coins < config.seed_price) {
+    gameStatus.innerText = `❌ Necesitas ${config.seed_price} monedas para comprar una semilla`;
+    return;
+  }
+
+  const { data: inv, error: invError } = await sb
+    .from("player_inventory")
+    .select("seed_count")
     .eq("player_id", currentPlayerId)
-    .maybeSingle();
+    .single();
 
-  if (checkError) {
-    console.log("ERROR REVISANDO PARCELA:", checkError);
-    plotStatus.innerText = "❌ " + checkError.message;
-    buyPlotBtn.disabled = false;
+  if (invError || !inv) {
+    gameStatus.innerText = "❌ Error cargando inventario";
     return;
   }
 
-  if (existingPlot) {
-    plotStatus.innerText = "✅ Ya tienes una parcela.";
-    renderOwnedPlot();
-    await loadSeed();
+  const okCoins = await setPlayerCoins(coins - config.seed_price);
+  if (!okCoins) {
+    gameStatus.innerText = "❌ No se pudieron descontar monedas";
     return;
   }
 
-  const { error: insertError } = await sb
-    .from("plots")
-    .insert({
-      player_id: currentPlayerId,
-      status: "owned"
+  const { error: invUpdateError } = await sb
+    .from("player_inventory")
+    .update({ seed_count: (inv.seed_count || 0) + 1 })
+    .eq("player_id", currentPlayerId);
+
+  if (invUpdateError) {
+    gameStatus.innerText = "❌ No se pudo sumar la semilla";
+    return;
+  }
+
+  const { error: configUpdateError } = await sb
+    .from("game_config")
+    .update({ sold_seeds: config.sold_seeds + 1 })
+    .eq("config_key", "main");
+
+  if (configUpdateError) {
+    gameStatus.innerText = "❌ No se pudo actualizar el stock";
+    return;
+  }
+
+  gameStatus.innerText = "🌰 Semilla comprada con éxito";
+  await loadWallet();
+  await loadSeedShop();
+}
+
+async function loadSlots() {
+  const { data, error } = await sb
+    .from("farm_slots")
+    .select("*")
+    .eq("player_id", currentPlayerId)
+    .order("slot_index", { ascending: true });
+
+  if (error) {
+    gameStatus.innerText = "❌ Error cargando slots";
+    return;
+  }
+
+  currentSlots = data || [];
+  renderSlots();
+}
+
+function renderSlots() {
+  slotsGrid.innerHTML = "";
+
+  currentSlots.forEach(slot => {
+    const button = document.createElement("button");
+    button.classList.add("slot");
+
+    if (selectedSlot && selectedSlot.slot_index === slot.slot_index) {
+      button.classList.add("selected");
+    }
+
+    if (!slot.is_unlocked) {
+      button.classList.add("locked");
+      button.innerHTML = `
+        <span class="slot-icon">🔒</span>
+        <div class="slot-name">Slot ${slot.slot_index}</div>
+        <div class="slot-sub">${getSlotUnlockCost(slot.slot_index)} monedas</div>
+      `;
+    } else if (!slot.plant_type) {
+      button.classList.add("empty");
+      button.innerHTML = `
+        <span class="slot-icon">🟫</span>
+        <div class="slot-name">Vacío</div>
+        <div class="slot-sub">Listo para plantar</div>
+      `;
+    } else {
+      const pending = getPendingProduction(slot);
+
+      if (pending > 0) {
+        button.classList.add("ready");
+      } else {
+        button.classList.add("planted");
+      }
+
+      button.innerHTML = `
+        <span class="slot-icon">${getPlantIcon(slot.plant_type)}</span>
+        <div class="slot-name">${slot.plant_type}</div>
+        <div class="slot-sub">${slot.plant_rarity} · +${pending}</div>
+      `;
+    }
+
+    button.addEventListener("click", () => {
+      selectedSlot = slot;
+      updateSelectedSlotPanel();
+      renderSlots();
     });
 
-  if (insertError) {
-    console.log("ERROR COMPRANDO PARCELA:", insertError);
-    plotStatus.innerText = "❌ " + insertError.message;
-    buyPlotBtn.disabled = false;
-    return;
-  }
+    slotsGrid.appendChild(button);
+  });
 
-  plotStatus.innerText = "✅ Parcela comprada con éxito";
-  renderOwnedPlot();
-  await loadSeed();
-}
-
-async function loadSeed() {
-  if (!currentPlayerId) return;
-
-  const { data, error } = await sb
-    .from("seeds")
-    .select("*")
-    .eq("player_id", currentPlayerId)
-    .maybeSingle();
-
-  if (error) {
-    console.log("ERROR CARGANDO SEMILLA:", error);
-    plotStatus.innerText = "❌ Error cargando semilla";
-    return;
-  }
-
-  if (!data) {
-    seedVisual.innerText = "🌰";
-    buySeedBtn.innerText = "Comprar semilla";
-    return;
-  }
-
-  if (data.status === "idle") {
-    seedVisual.innerText = "🌱";
-    buySeedBtn.innerText = "Plantar";
-    return;
-  }
-
-  if (data.status === "growing") {
-    const now = new Date();
-    const ready = new Date(data.ready_at);
-
-    if (now >= ready) {
-      seedVisual.innerText = "🌾";
-      buySeedBtn.innerText = "Cosechar";
-    } else {
-      seedVisual.innerText = "🌿";
-      buySeedBtn.innerText = "Creciendo...";
-    }
+  if (!selectedSlot && currentSlots.length > 0) {
+    selectedSlot = currentSlots[0];
+    updateSelectedSlotPanel();
+    renderSlots();
   }
 }
 
-async function handleSeedAction() {
-  if (!currentPlayerId) return;
+function getPlantIcon(plantType) {
+  const plant = PLANT_POOL.find(p => p.name === plantType);
+  return plant?.icon || "🌱";
+}
 
-  const { data: plotData, error: plotError } = await sb
-    .from("plots")
-    .select("id")
-    .eq("player_id", currentPlayerId)
-    .maybeSingle();
-
-  if (plotError) {
-    console.log("ERROR REVISANDO PARCELA PARA SEMILLA:", plotError);
-    plotStatus.innerText = "❌ Error revisando parcela";
+function updateSelectedSlotPanel() {
+  if (!selectedSlot) {
+    slotInfoTitle.innerText = "Selecciona un slot";
+    slotInfoDesc.innerText = "Aquí verás el estado del slot.";
+    slotActionBtn.disabled = true;
+    slotActionBtn.innerText = "Selecciona un slot";
     return;
   }
 
-  if (!plotData) {
-    plotStatus.innerText = "❌ Primero necesitas una parcela";
+  if (!selectedSlot.is_unlocked) {
+    const cost = getSlotUnlockCost(selectedSlot.slot_index);
+    slotInfoTitle.innerText = `Slot ${selectedSlot.slot_index} bloqueado`;
+    slotInfoDesc.innerText = `Desbloquea este espacio por ${cost} monedas.`;
+    slotActionBtn.disabled = false;
+    slotActionBtn.innerText = `Desbloquear (${cost})`;
     return;
   }
 
-  const { data, error } = await sb
-    .from("seeds")
-    .select("*")
-    .eq("player_id", currentPlayerId)
-    .maybeSingle();
+  if (!selectedSlot.plant_type) {
+    slotInfoTitle.innerText = `Slot ${selectedSlot.slot_index} vacío`;
+    slotInfoDesc.innerText = `Puedes plantar aquí una semilla de tu inventario.`;
+    slotActionBtn.disabled = false;
+    slotActionBtn.innerText = `Plantar semilla`;
+    return;
+  }
+
+  const pending = getPendingProduction(selectedSlot);
+  const plant = PLANT_POOL.find(p => p.name === selectedSlot.plant_type);
+
+  if (pending > 0) {
+    slotInfoTitle.innerText = selectedSlot.plant_type;
+    slotInfoDesc.innerText = `Rareza: ${selectedSlot.plant_rarity} · Producción lista: ${pending}`;
+    slotActionBtn.disabled = false;
+    slotActionBtn.innerText = `Recolectar (${pending})`;
+  } else {
+    const cycle = plant?.cycle || selectedSlot.cycle_seconds || 30;
+    const elapsed = Math.floor((Date.now() - new Date(selectedSlot.last_collected_at).getTime()) / 1000);
+    const left = Math.max(0, cycle - elapsed);
+
+    slotInfoTitle.innerText = selectedSlot.plant_type;
+    slotInfoDesc.innerText = `Rareza: ${selectedSlot.plant_rarity} · Próxima producción en ${formatSeconds(left)}`;
+    slotActionBtn.disabled = true;
+    slotActionBtn.innerText = `Produciendo...`;
+  }
+}
+
+async function handleSlotAction() {
+  if (!selectedSlot) return;
+
+  if (!selectedSlot.is_unlocked) {
+    await unlockSlot(selectedSlot);
+    return;
+  }
+
+  if (!selectedSlot.plant_type) {
+    await plantSeedInSlot(selectedSlot);
+    return;
+  }
+
+  await collectFromSlot(selectedSlot);
+}
+
+async function unlockSlot(slot) {
+  const cost = getSlotUnlockCost(slot.slot_index);
+  const coins = await getPlayerCoins();
+
+  if (coins < cost) {
+    gameStatus.innerText = `❌ Necesitas ${cost} monedas para desbloquear este slot`;
+    return;
+  }
+
+  const okCoins = await setPlayerCoins(coins - cost);
+  if (!okCoins) {
+    gameStatus.innerText = "❌ No se pudieron descontar monedas";
+    return;
+  }
+
+  const { error } = await sb
+    .from("farm_slots")
+    .update({ is_unlocked: true })
+    .eq("id", slot.id);
 
   if (error) {
-    console.log("ERROR CON SEMILLA:", error);
-    plotStatus.innerText = "❌ Error con semilla";
+    gameStatus.innerText = "❌ No se pudo desbloquear el slot";
     return;
   }
 
-  if (!data) {
-    const { error: insertSeedError } = await sb
-      .from("seeds")
-      .insert({
-        player_id: currentPlayerId,
-        type: "trigo",
-        status: "idle"
-      });
+  gameStatus.innerText = `✅ Slot ${slot.slot_index} desbloqueado`;
+  await loadWallet();
+  await loadSlots();
+}
 
-    if (insertSeedError) {
-      console.log("ERROR COMPRANDO SEMILLA:", insertSeedError);
-      plotStatus.innerText = "❌ " + insertSeedError.message;
-      return;
-    }
+async function plantSeedInSlot(slot) {
+  const { data: inv, error: invError } = await sb
+    .from("player_inventory")
+    .select("seed_count")
+    .eq("player_id", currentPlayerId)
+    .single();
 
-    plotStatus.innerText = "🌱 Semilla comprada";
-    seedVisual.innerText = "🌱";
-    buySeedBtn.innerText = "Plantar";
+  if (invError || !inv) {
+    gameStatus.innerText = "❌ Error cargando inventario";
     return;
   }
 
-  if (data.status === "idle") {
-    const now = new Date();
-    const ready = new Date(now.getTime() + 30000);
-
-    const { error: updateSeedError } = await sb
-      .from("seeds")
-      .update({
-        status: "growing",
-        planted_at: now.toISOString(),
-        ready_at: ready.toISOString()
-      })
-      .eq("id", data.id);
-
-    if (updateSeedError) {
-      console.log("ERROR PLANTANDO SEMILLA:", updateSeedError);
-      plotStatus.innerText = "❌ " + updateSeedError.message;
-      return;
-    }
-
-    plotStatus.innerText = "🌿 Semilla plantada, estará lista en 30 segundos";
-    seedVisual.innerText = "🌿";
-    buySeedBtn.innerText = "Creciendo...";
+  if ((inv.seed_count || 0) <= 0) {
+    gameStatus.innerText = "❌ No tienes semillas. Compra una en la pestaña Semillas.";
     return;
   }
 
-  if (data.status === "growing") {
-    const now = new Date();
-    const ready = new Date(data.ready_at);
+  const plant = getWeightedPlant();
+  const nowIso = new Date().toISOString();
 
-    if (now >= ready) {
-      const { data: playerData, error: playerError } = await sb
-        .from("players")
-        .select("coins")
-        .eq("telegram_id", currentPlayerId)
-        .single();
+  const { error: slotUpdateError } = await sb
+    .from("farm_slots")
+    .update({
+      plant_type: plant.name,
+      plant_rarity: plant.rarity,
+      production_rate: plant.rate,
+      cycle_seconds: plant.cycle,
+      planted_at: nowIso,
+      last_collected_at: nowIso
+    })
+    .eq("id", slot.id);
 
-      if (playerError) {
-        console.log("ERROR OBTENIENDO MONEDAS:", playerError);
-        plotStatus.innerText = "❌ Error obteniendo monedas";
-        return;
-      }
-
-      const newCoins = (playerData?.coins || 0) + 10;
-
-      const { error: updateCoinsError } = await sb
-        .from("players")
-        .update({ coins: newCoins })
-        .eq("telegram_id", currentPlayerId);
-
-      if (updateCoinsError) {
-        console.log("ERROR SUMANDO MONEDAS:", updateCoinsError);
-        plotStatus.innerText = "❌ Error sumando monedas";
-        return;
-      }
-
-      const { error: deleteSeedError } = await sb
-        .from("seeds")
-        .delete()
-        .eq("id", data.id);
-
-      if (deleteSeedError) {
-        console.log("ERROR COSECHANDO:", deleteSeedError);
-        plotStatus.innerText = "❌ " + deleteSeedError.message;
-        return;
-      }
-
-      plotStatus.innerText = `🌾 Cosechado +10 monedas (Total: ${newCoins})`;
-      seedVisual.innerText = "🌰";
-      buySeedBtn.innerText = "Comprar semilla";
-    } else {
-      const secondsLeft = Math.max(
-        0,
-        Math.ceil((ready.getTime() - now.getTime()) / 1000)
-      );
-
-      plotStatus.innerText = `⏳ Aún creciendo... ${secondsLeft}s`;
-      seedVisual.innerText = "🌿";
-      buySeedBtn.innerText = "Creciendo...";
-    }
+  if (slotUpdateError) {
+    gameStatus.innerText = "❌ No se pudo plantar";
+    return;
   }
+
+  const { error: invUpdateError } = await sb
+    .from("player_inventory")
+    .update({ seed_count: (inv.seed_count || 0) - 1 })
+    .eq("player_id", currentPlayerId);
+
+  if (invUpdateError) {
+    gameStatus.innerText = "❌ No se pudo descontar la semilla";
+    return;
+  }
+
+  gameStatus.innerText = `🌱 Plantaste y apareció: ${plant.name} (${plant.rarity})`;
+  await loadWallet();
+  await loadSlots();
+}
+
+async function collectFromSlot(slot) {
+  const pending = getPendingProduction(slot);
+
+  if (pending <= 0) {
+    gameStatus.innerText = "⏳ Aún no hay producción lista";
+    return;
+  }
+
+  const coins = await getPlayerCoins();
+  const newCoins = coins + pending;
+
+  const okCoins = await setPlayerCoins(newCoins);
+  if (!okCoins) {
+    gameStatus.innerText = "❌ No se pudieron sumar monedas";
+    return;
+  }
+
+  const { error } = await sb
+    .from("farm_slots")
+    .update({
+      last_collected_at: new Date().toISOString()
+    })
+    .eq("id", slot.id);
+
+  if (error) {
+    gameStatus.innerText = "❌ No se pudo actualizar la recolección";
+    return;
+  }
+
+  gameStatus.innerText = `🌾 Recolectaste ${pending} monedas de ${slot.plant_type}`;
+  await loadWallet();
+  await loadSlots();
 }
 
 async function initGame() {
   const ok = await loadPlayer();
   if (!ok) return;
 
-  await loadPlot();
-  await loadSeed();
+  await ensureInventory();
+  await ensureSlots();
+  await loadWallet();
+  await loadSeedShop();
+  await loadSlots();
+
+  setInterval(async () => {
+    if (tabFarm.classList.contains("active")) {
+      updateSelectedSlotPanel();
+      renderSlots();
+    }
+  }, 1000);
 }
 
 initGame();

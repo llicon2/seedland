@@ -9,38 +9,63 @@
 </head>
 <body>
 
-  <div class="game-container">
+  <div class="game-shell">
 
     <div class="top-bar">
       <button class="back-btn" onclick="window.location.href='index.html'">⬅ Volver</button>
-      <div class="wallet">💎 Billetera</div>
+      <div class="wallet-box">
+        <span id="coinsText">💎 0</span>
+        <span id="seedCountText">🌰 0</span>
+      </div>
     </div>
 
     <h1 class="title">SeedLand</h1>
     <p class="welcome-text" id="welcomeText">Cargando jugador...</p>
 
-    <div class="plots-container">
-
-      <div class="plot-box" id="plotBox">
-        <div class="plot-visual" id="plotVisual">🟫</div>
-        <button id="buyPlotBtn" class="game-btn">Comprar parcela</button>
+    <!-- PESTAÑA PARCELA -->
+    <section id="tabFarm" class="tab-section active">
+      <div class="farm-board-wrap">
+        <div class="farm-board">
+          <div id="slotsGrid" class="slots-grid"></div>
+        </div>
       </div>
 
-      <div class="plot-box" id="seedBox">
-        <div class="plot-visual" id="seedVisual">🌰</div>
-        <button id="buySeedBtn" class="game-btn" disabled>Comprar semilla</button>
+      <div class="info-panel">
+        <div id="slotInfoTitle" class="info-title">Selecciona un slot</div>
+        <div id="slotInfoDesc" class="info-desc">Aquí verás el estado del slot.</div>
+        <button id="slotActionBtn" class="main-btn" disabled>Selecciona un slot</button>
       </div>
 
-    </div>
+      <p id="gameStatus" class="status-text"></p>
+    </section>
 
-    <p id="plotStatus" class="status-text"></p>
+    <!-- PESTAÑA SEMILLAS -->
+    <section id="tabSeeds" class="tab-section">
+      <div class="shop-card">
+        <div class="shop-seed-icon">🌰</div>
+        <div class="shop-title">Semilla Misteriosa</div>
+        <div class="shop-desc">
+          Puede revelar una planta de rareza:
+          <br>Común, Rara, Épica, Legendaria o Mítica
+        </div>
+
+        <div class="shop-stock">
+          <div>Stock total: <span id="totalSeedsText">10000</span></div>
+          <div>Vendidas: <span id="soldSeedsText">0</span></div>
+          <div>Restantes: <span id="remainingSeedsText">10000</span></div>
+          <div>Precio: <span id="seedPriceText">10</span> monedas</div>
+        </div>
+
+        <button id="buySeedBtn" class="main-btn">Comprar semilla</button>
+      </div>
+    </section>
 
     <div class="bottom-menu">
-      <div class="menu-item active">🌱<span>Parcela</span></div>
-      <div class="menu-item">🔍<span>Buscar</span></div>
-      <div class="menu-item">🏪<span>Market</span></div>
-      <div class="menu-item">🎯<span>Misión</span></div>
-      <div class="menu-item">💰<span>Billetera</span></div>
+      <button id="menuFarmBtn" class="menu-btn active">🌱<span>Parcela</span></button>
+      <button id="menuSeedsBtn" class="menu-btn">🌰<span>Semillas</span></button>
+      <button class="menu-btn disabled-btn" disabled>🔍<span>Buscar</span></button>
+      <button class="menu-btn disabled-btn" disabled>🏪<span>Market</span></button>
+      <button class="menu-btn disabled-btn" disabled>💼<span>Items</span></button>
     </div>
 
   </div>
