@@ -96,7 +96,8 @@ body {
 }
 
 .slot-spot.selected {
-  box-shadow: 0 0 0 3px #ffe082;
+  box-shadow: 0 0 0 3px #ffe082, 0 0 12px rgba(255, 224, 130, 0.6);
+
   background: rgba(255, 236, 179, 0.10);
 }
 
@@ -124,7 +125,7 @@ body {
 
 .slot-lock {
   position: absolute;
-  top: 6px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 22px;
@@ -133,7 +134,7 @@ body {
 
 .slot-cost {
   position: absolute;
-  bottom: 2px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0,0,0,0.62);
