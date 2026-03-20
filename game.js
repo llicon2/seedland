@@ -10,14 +10,10 @@ tg.ready();
 
 const welcomeText = document.getElementById("welcomeText");
 const buyPlotBtn = document.getElementById("buyPlotBtn");
+const buySeedBtn = document.getElementById("buySeedBtn");
 const plotStatus = document.getElementById("plotStatus");
-
-const plotCard = document.getElementById("plotCard");
 const plotVisual = document.getElementById("plotVisual");
-const plotTitle = document.getElementById("plotTitle");
-const plotDesc = document.getElementById("plotDesc");
-
-const seedCard = document.getElementById("seedCard");
+const seedVisual = document.getElementById("seedVisual");
 
 let currentPlayerId = null;
 let currentPlayerName = "Jugador";
@@ -34,6 +30,7 @@ async function loadPlayer() {
   if (!user) {
     welcomeText.innerText = "❌ Abre esta app desde Telegram";
     buyPlotBtn.disabled = true;
+    buySeedBtn.disabled = true;
     return false;
   }
 
@@ -52,13 +49,15 @@ async function loadPlayer() {
     console.log("ERROR CARGANDO PLAYER:", error);
     welcomeText.innerText = "❌ Error cargando jugador";
     buyPlotBtn.disabled = true;
+    buySeedBtn.disabled = true;
     return false;
   }
 
   if (!data) {
     welcomeText.innerText = "❌ Primero debes preregistrarte";
     buyPlotBtn.disabled = true;
-    plotStatus.innerText = "Vuelve a la pantalla de preregistro antes de jugar.";
+    buySeedBtn.disabled = true;
+    plotStatus.innerText = "Vuelve al preregistro antes de jugar.";
     return false;
   }
 
@@ -89,41 +88,29 @@ async function loadPlot() {
 }
 
 function renderNoPlot() {
-  plotCard.className = "slot-card empty";
   plotVisual.innerText = "🟫";
-  plotTitle.innerText = "Slot de parcela vacío";
-  plotDesc.innerText = "Necesitas comprar una parcela para comenzar.";
-  plotStatus.innerText = "Aún no tienes una parcela.";
-  buyPlotBtn.disabled = false;
-  buyPlotBtn.innerText = "🛒 Comprar parcela";
+  seedVisual.innerText = "🌰";
 
-  seedCard.className = "slot-card locked";
-  seedCard.innerHTML = `
-    <div class="slot-visual">🌰</div>
-    <div class="slot-info">
-      <h3>Slot de semilla bloqueado</h3>
-      <p>Primero debes tener una parcela.</p>
-    </div>
-  `;
+  plotStatus.innerText = "Compra tu primera parcela";
+
+  buyPlotBtn.disabled = false;
+  buyPlotBtn.innerText = "Comprar parcela";
+
+  buySeedBtn.disabled = true;
+  buySeedBtn.innerText = "Comprar semilla";
 }
 
 function renderOwnedPlot() {
-  plotCard.className = "slot-card owned";
   plotVisual.innerText = "🌾";
-  plotTitle.innerText = "Parcela comprada";
-  plotDesc.innerText = "Tu terreno ya está listo para plantar.";
-  plotStatus.innerText = "✅ Ya tienes una parcela disponible.";
-  buyPlotBtn.disabled = true;
-  buyPlotBtn.innerText = "✅ Parcela comprada";
+  seedVisual.innerText = "🌱";
 
-  seedCard.className = "slot-card ready";
-  seedCard.innerHTML = `
-    <div class="slot-visual">🌱</div>
-    <div class="slot-info">
-      <h3>Slot de semilla desbloqueado</h3>
-      <p>En el siguiente paso agregaremos compra y plantado de semillas.</p>
-    </div>
-  `;
+  plotStatus.innerText = "✅ Parcela lista para plantar";
+
+  buyPlotBtn.innerText = "✅ Parcela comprada";
+  buyPlotBtn.disabled = true;
+
+  buySeedBtn.disabled = false;
+  buySeedBtn.innerText = "Comprar semilla";
 }
 
 async function buyPlot() {
@@ -140,7 +127,7 @@ async function buyPlot() {
 
   if (checkError) {
     console.log("ERROR REVISANDO PARCELA:", checkError);
-    plotStatus.innerText = "❌ Error revisando parcela";
+    plotStatus.innerText = "❌ " + checkError.message;
     buyPlotBtn.disabled = false;
     return;
   }
@@ -158,12 +145,12 @@ async function buyPlot() {
       status: "owned"
     });
 
- if (insertError) {
-  console.log("ERROR COMPRANDO PARCELA:", insertError);
-  plotStatus.innerText = "❌ " + insertError.message;
-  buyPlotBtn.disabled = false;
-  return;
-}
+  if (insertError) {
+    console.log("ERROR COMPRANDO PARCELA:", insertError);
+    plotStatus.innerText = "❌ " + insertError.message;
+    buyPlotBtn.disabled = false;
+    return;
+  }
 
   plotStatus.innerText = "✅ Parcela comprada con éxito";
   renderOwnedPlot();
