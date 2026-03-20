@@ -19,6 +19,7 @@ let currentPlayerId = null;
 let currentPlayerName = "Jugador";
 
 buyPlotBtn.addEventListener("click", buyPlot);
+buySeedBtn.addEventListener("click", handleSeedAction);
 
 function getTelegramUser() {
   return tg.initDataUnsafe?.user || null;
@@ -102,7 +103,6 @@ function renderNoPlot() {
 
 function renderOwnedPlot() {
   plotVisual.innerText = "🌾";
-  seedVisual.innerText = "🌱";
 
   plotStatus.innerText = "✅ Parcela lista para plantar";
 
@@ -110,7 +110,6 @@ function renderOwnedPlot() {
   buyPlotBtn.disabled = true;
 
   buySeedBtn.disabled = false;
-  buySeedBtn.innerText = "Comprar semilla";
 }
 
 async function buyPlot() {
@@ -135,6 +134,7 @@ async function buyPlot() {
   if (existingPlot) {
     plotStatus.innerText = "✅ Ya tienes una parcela.";
     renderOwnedPlot();
+    await loadSeed();
     return;
   }
 
@@ -154,6 +154,161 @@ async function buyPlot() {
 
   plotStatus.innerText = "✅ Parcela comprada con éxito";
   renderOwnedPlot();
+  await loadSeed();
+}
+
+async function loadSeed() {
+  if (!currentPlayerId) return;
+
+  const { data, error } = await sb
+    .from("seeds")
+    .select("*")
+    .eq("player_id", currentPlayerId)
+    .maybeSingle();
+
+  if (error) {
+    console.log("ERROR CARGANDO SEMILLA:", error);
+    plotStatus.innerText = "❌ Error cargando semilla";
+    return;
+  }
+
+  if (!data) {
+    seedVisual.innerText = "🌰";
+    buySeedBtn.innerText = "Comprar semilla";
+    return;
+  }
+
+  if (data.status === "idle") {
+    seedVisual.innerText = "🌱";
+    buySeedBtn.innerText = "Plantar";
+    return;
+  }
+
+  if (data.status === "growing") {
+    const now = new Date();
+    const ready = new Date(data.ready_at);
+
+    if (now >= ready) {
+      seedVisual.innerText = "🌾";
+      buySeedBtn.innerText = "Cosechar";
+    } else {
+      seedVisual.innerText = "🌿";
+      buySeedBtn.innerText = "Creciendo...";
+    }
+  }
+}
+
+async function handleSeedAction() {
+  if (!currentPlayerId) return;
+
+  const { data: plotData, error: plotError } = await sb
+    .from("plots")
+    .select("id")
+    .eq("player_id", currentPlayerId)
+    .maybeSingle();
+
+  if (plotError) {
+    console.log("ERROR REVISANDO PARCELA PARA SEMILLA:", plotError);
+    plotStatus.innerText = "❌ Error revisando parcela";
+    return;
+  }
+
+  if (!plotData) {
+    plotStatus.innerText = "❌ Primero necesitas una parcela";
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("seeds")
+    .select("*")
+    .eq("player_id", currentPlayerId)
+    .maybeSingle();
+
+  if (error) {
+    console.log("ERROR CON SEMILLA:", error);
+    plotStatus.innerText = "❌ Error con semilla";
+    return;
+  }
+
+  // NO TIENE SEMILLA → COMPRAR
+  if (!data) {
+    const { error: insertSeedError } = await sb
+      .from("seeds")
+      .insert({
+        player_id: currentPlayerId,
+        type: "trigo",
+        status: "idle"
+      });
+
+    if (insertSeedError) {
+      console.log("ERROR COMPRANDO SEMILLA:", insertSeedError);
+      plotStatus.innerText = "❌ " + insertSeedError.message;
+      return;
+    }
+
+    plotStatus.innerText = "🌱 Semilla comprada";
+    seedVisual.innerText = "🌱";
+    buySeedBtn.innerText = "Plantar";
+    return;
+  }
+
+  // TIENE SEMILLA SIN PLANTAR → PLANTAR
+  if (data.status === "idle") {
+    const now = new Date();
+    const ready = new Date(now.getTime() + 30000); // 30 segundos
+
+    const { error: updateSeedError } = await sb
+      .from("seeds")
+      .update({
+        status: "growing",
+        planted_at: now.toISOString(),
+        ready_at: ready.toISOString()
+      })
+      .eq("id", data.id);
+
+    if (updateSeedError) {
+      console.log("ERROR PLANTANDO SEMILLA:", updateSeedError);
+      plotStatus.innerText = "❌ " + updateSeedError.message;
+      return;
+    }
+
+    plotStatus.innerText = "🌿 Semilla plantada, estará lista en 30 segundos";
+    seedVisual.innerText = "🌿";
+    buySeedBtn.innerText = "Creciendo...";
+    return;
+  }
+
+  // SI ESTÁ CRECIENDO → REVISAR SI YA SE PUEDE COSECHAR
+  if (data.status === "growing") {
+    const now = new Date();
+    const ready = new Date(data.ready_at);
+
+    if (now >= ready) {
+      const { error: deleteSeedError } = await sb
+        .from("seeds")
+        .delete()
+        .eq("id", data.id);
+
+      if (deleteSeedError) {
+        console.log("ERROR COSECHANDO:", deleteSeedError);
+        plotStatus.innerText = "❌ " + deleteSeedError.message;
+        return;
+      }
+
+      plotStatus.innerText = "🌾 Cosechado con éxito";
+      seedVisual.innerText = "🌰";
+      buySeedBtn.innerText = "Comprar semilla";
+    } else {
+      const secondsLeft = Math.max(
+        0,
+        Math.ceil((ready.getTime() - now.getTime()) / 1000)
+      );
+
+      plotStatus.innerText = `⏳ Aún creciendo... ${secondsLeft}s`;
+      seedVisual.innerText = "🌿";
+      buySeedBtn.innerText = "Creciendo...";
+    }
+  }
 }
 
 async function initGame() {
@@ -161,6 +316,7 @@ async function initGame() {
   if (!ok) return;
 
   await loadPlot();
+  await loadSeed();
 }
 
 initGame();
