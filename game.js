@@ -11,7 +11,7 @@ tg.ready();
 /* =========================
    DEBUG PARA MOVER SLOTS
 ========================= */
-const DEBUG_MOVE_SLOTS = true;
+const DEBUG_MOVE_SLOTS = false;
 
 const welcomeText = document.getElementById("welcomeText");
 const coinsText = document.getElementById("coinsText");
