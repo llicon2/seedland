@@ -9,7 +9,7 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 
 /* =========================
-   DEBUG PARA MOVER SLOTS
+   DEBUG PARA MOVER SLOTS :)
 ========================= */
 const DEBUG_MOVE_SLOTS = false;
 
