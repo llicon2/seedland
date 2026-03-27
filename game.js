@@ -60,19 +60,19 @@ const SLOT_POSITIONS = {
 const liveSlotPositions = JSON.parse(JSON.stringify(SLOT_POSITIONS));
 
 const PLANT_POOL = [
-  { key: "sprout", name: "Brote Verde", rarity: "Común", rate: 1, cycle: 30, icon: "🌱", chance: 25 },
-  { key: "gold_grass", name: "Hierba Dorada", rarity: "Común", rate: 2, cycle: 35, icon: "🌾", chance: 18 },
-  { key: "blue_daisy", name: "Margarita Azul", rarity: "Común", rate: 2, cycle: 38, icon: "🌼", chance: 12 },
-  { key: "apple_root", name: "Raíz Roja", rarity: "Común", rate: 2, cycle: 40, icon: "🍎", chance: 10 },
-  { key: "water_leaf", name: "Hoja de Agua", rarity: "Común", rate: 3, cycle: 45, icon: "💧", chance: 8 },
-  { key: "gold_wheat", name: "Trigo Dorado", rarity: "Común", rate: 3, cycle: 45, icon: "🌿", chance: 8 },
-  { key: "sunflower", name: "Girasol", rarity: "Común", rate: 3, cycle: 50, icon: "🌻", chance: 7 },
-  { key: "white_flower", name: "Flor Blanca", rarity: "Común", rate: 3, cycle: 50, icon: "🤍", chance: 5 },
-  { key: "root_bulb", name: "Bulbo Raíz", rarity: "Común", rate: 4, cycle: 55, icon: "🥔", chance: 3 },
-  { key: "blue_crystal", name: "Cristal Azul", rarity: "Rara", rate: 6, cycle: 65, icon: "💎", chance: 2 },
-  { key: "rainbow_crystal", name: "Cristal Arcoíris", rarity: "Épica", rate: 10, cycle: 80, icon: "🌈", chance: 1.2 },
-  { key: "pink_lotus", name: "Loto Rosa", rarity: "Legendaria", rate: 14, cycle: 95, icon: "🌸", chance: 0.6 },
-  { key: "mythic_seed", name: "Semilla Mítica", rarity: "Mítica", rate: 22, cycle: 120, icon: "✨", chance: 0.2 }
+  { key: "sprout", name: "Brote Verde", rarity: "Común", rate: 1, cycle: 30, icon: "🌱", image: "images/plants/1brote_verde.png", chance: 25 },
+  { key: "gold_grass", name: "Hierba Dorada", rarity: "Común", rate: 2, cycle: 35, icon: "🌾", image: "images/plants/2acuatic_water.png", chance: 18 },
+  { key: "blue_daisy", name: "Margarita Azul", rarity: "Común", rate: 2, cycle: 38, icon: "🌼", image: "images/plants/3bulbo_terrenal.png", chance: 12 },
+  { key: "apple_root", name: "Raíz Roja", rarity: "Común", rate: 2, cycle: 40, icon: "🍎", image: "images/plants/4girasol.png", chance: 10 },
+  { key: "water_leaf", name: "Hoja de Agua", rarity: "Común", rate: 3, cycle: 45, icon: "💧", image: "images/plants/5hierba_dorada.png", chance: 8 },
+  { key: "gold_wheat", name: "Trigo Dorado", rarity: "Común", rate: 3, cycle: 45, icon: "🌿", image: "images/plants/6manzanilla.png", chance: 8 },
+  { key: "sunflower", name: "Girasol", rarity: "Común", rate: 3, cycle: 50, icon: "🌻", image: "images/plants/7trigo.png", chance: 7 },
+  { key: "white_flower", name: "Flor Blanca", rarity: "Común", rate: 3, cycle: 50, icon: "🤍", image: "images/plants/8loto_rosado.png", chance: 5 },
+  { key: "root_bulb", name: "Bulbo Raíz", rarity: "Común", rate: 4, cycle: 55, icon: "🥔", image: "images/plants/9margarita_azul.png", chance: 3 },
+  { key: "blue_crystal", name: "Cristal Azul", rarity: "Común", rate: 6, cycle: 65, icon: "💎", image: "images/plants/10Rabano.png", chance: 2 },
+  { key: "rainbow_crystal", name: "Cristal Arcoíris", rarity: "Común", rate: 10, cycle: 80, icon: "🌈", image: "images/plants/epica_1.png", chance: 1.2 },
+  { key: "pink_lotus", name: "Loto Rosa", rarity: "Común", rate: 14, cycle: 95, icon: "🌸", image: "images/plants/11planta_cristalina.png", chance: 0.6 },
+  { key: "mythic_seed", name: "Semilla Mítica", rarity: "Común", rate: 22, cycle: 120, icon: "✨", image: "images/plants/12cristal_arcoiris.png", chance: 0.2 }
 ];
 
 buySeedBtn.addEventListener("click", buySeed);
@@ -338,6 +338,11 @@ function getPlantIcon(plantType) {
   return plant?.icon || "🌱";
 }
 
+function getPlantImage(plantType) {
+  const plant = PLANT_POOL.find(p => p.name === plantType);
+  return plant?.image || "";
+}
+
 function enableDebugDrag(slotElement, slotId) {
   if (!DEBUG_MOVE_SLOTS) return;
 
@@ -418,12 +423,14 @@ function renderSlots() {
     } else if (!slot.plant_type) {
       button.classList.add("empty");
       button.innerHTML = `<div class="slot-inner"></div>`;
-    } else {
+        } else {
       const pending = getPendingProduction(slot);
+      const plantImage = getPlantImage(slot.plant_type);
+
       button.classList.add(pending > 0 ? "ready" : "planted");
       button.innerHTML = `
         <div class="slot-inner">
-          <div class="slot-plant">${getPlantIcon(slot.plant_type)}</div>
+          <img class="slot-plant-img" src="${plantImage}" alt="${slot.plant_type}">
           <div class="slot-badge">+${pending}</div>
         </div>
       `;
