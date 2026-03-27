@@ -6,6 +6,10 @@ body {
   min-height: 100vh;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 .game-shell {
   max-width: 520px;
   margin: 0 auto;
@@ -43,13 +47,13 @@ body {
 .title {
   font-size: 48px;
   margin: 14px 0 8px;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .welcome-text {
   margin: 0 0 18px;
   font-weight: bold;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .tab-section {
@@ -60,7 +64,7 @@ body {
   display: block;
 }
 
-/* PARCELA REAL */
+/* PARCELA */
 .farm-scene {
   display: flex;
   justify-content: center;
@@ -93,12 +97,12 @@ body {
   background: transparent;
   cursor: pointer;
   border-radius: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .slot-spot.selected {
   box-shadow: 0 0 0 3px #ffe082, 0 0 12px rgba(255, 224, 130, 0.6);
-
-  background: rgba(255, 236, 179, 0.10);
+  background: rgba(255, 236, 179, 0.1);
 }
 
 .slot-spot.locked {
@@ -110,7 +114,7 @@ body {
 }
 
 .slot-spot.planted {
-  background: rgba(87, 189, 91, 0.10);
+  background: rgba(87, 189, 91, 0.1);
 }
 
 .slot-spot.ready {
@@ -129,7 +133,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   font-size: 22px;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
 
 .slot-cost {
@@ -137,7 +141,7 @@ body {
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,0.62);
+  background: rgba(0, 0, 0, 0.62);
   color: white;
   border-radius: 10px;
   font-size: 10px;
@@ -151,7 +155,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 24px;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
 
 .slot-plant-img {
@@ -163,21 +167,21 @@ body {
   height: auto;
   image-rendering: pixelated;
   pointer-events: none;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
 
 .slot-badge {
   position: absolute;
   bottom: 4px;
   right: 4px;
-  background: rgba(0,0,0,0.58);
+  background: rgba(0, 0, 0, 0.58);
   color: #fff;
   border-radius: 10px;
   font-size: 11px;
   padding: 3px 6px;
 }
 
-/* PANEL */
+/* PANEL VIEJO OCULTO */
 .info-panel {
   display: none;
 }
@@ -203,11 +207,17 @@ body {
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.main-btn:hover {
+  transform: translateY(-1px);
 }
 
 .main-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
 }
 
 .status-text {
@@ -221,7 +231,7 @@ body {
 .shop-card {
   max-width: 420px;
   margin: 0 auto;
-  background: rgba(0,0,0,0.18);
+  background: rgba(0, 0, 0, 0.18);
   border-radius: 20px;
   padding: 18px;
 }
@@ -242,7 +252,7 @@ body {
 }
 
 .shop-stock {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 12px;
   margin-bottom: 14px;
@@ -261,7 +271,8 @@ body {
   display: flex;
   justify-content: space-around;
   padding: 10px 0 12px;
-  border-top: 1px solid rgba(255,255,255,0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 50;
 }
 
 .menu-btn {
@@ -289,6 +300,7 @@ body {
   cursor: not-allowed;
 }
 
+/* MODAL */
 .slot-modal {
   position: fixed;
   inset: 0;
@@ -311,7 +323,7 @@ body {
   background: linear-gradient(to bottom, #8fd0ff 0%, #8fd0ff 42%, #79c85b 42%, #79c85b 100%);
   border-radius: 24px;
   padding: 18px 18px 20px;
-  box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
   text-align: center;
   color: white;
   overflow: hidden;
@@ -325,47 +337,70 @@ body {
   height: 34px;
   border: none;
   border-radius: 50%;
-  background: rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.18);
   color: white;
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
+  z-index: 5;
 }
 
 .slot-modal-plant-wrap {
-  background: rgba(0,0,0,0.12);
+  position: relative;
   border-radius: 18px;
   margin-top: 24px;
   margin-bottom: 16px;
-  padding: 20px;
-  min-height: 150px;
+  min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  background-image: url("images/modal-farm-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.slot-modal-plant-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  z-index: 1;
 }
 
 .slot-modal-plant {
+  position: relative;
+  z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  min-height: 110px;
-  font-size: 72px;
-  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.35));
+  width: 100%;
+  min-height: 220px;
+  padding-bottom: 12px;
+  font-size: 90px;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
 }
 
 .slot-modal-plant-img {
-  width: 110px;
-  max-height: 120px;
+  width: 165px;
+  max-height: 165px;
   object-fit: contain;
   image-rendering: pixelated;
-  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+  transform: scale(1.12);
 }
 
 .slot-modal-title {
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 6px;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.15);
 }
 
 .slot-modal-desc {
@@ -375,7 +410,7 @@ body {
 }
 
 .slot-modal-stats {
-  background: rgba(255,255,255,0.14);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   padding: 14px 16px;
   margin-bottom: 14px;
@@ -393,4 +428,51 @@ body {
 
 .slot-modal-card .main-btn {
   margin-top: 4px;
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+  .game-shell {
+    padding: 12px 12px 120px;
+  }
+
+  .title {
+    font-size: 42px;
+  }
+
+  .wallet-box {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .slot-modal-card {
+    max-width: 94vw;
+    padding: 16px 16px 18px;
+  }
+
+  .slot-modal-plant-wrap {
+    min-height: 200px;
+  }
+
+  .slot-modal-plant {
+    min-height: 200px;
+    font-size: 78px;
+  }
+
+  .slot-modal-plant-img {
+    width: 145px;
+    max-height: 145px;
+  }
+
+  .slot-modal-title {
+    font-size: 20px;
+  }
+
+  .slot-modal-stats {
+    font-size: 13px;
+  }
+
+  .main-btn {
+    font-size: 16px;
+  }
 }
