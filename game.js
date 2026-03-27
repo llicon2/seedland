@@ -166,7 +166,7 @@ async function loadPlayer() {
 
   const { data, error } = await sb
     .from("players")
-    .select("telegram_id, name")
+    .select("id, telegram_id, name, coins")
     .eq("telegram_id", currentPlayerId)
     .maybeSingle();
 
@@ -174,6 +174,10 @@ async function loadPlayer() {
     welcomeText.innerText = "❌ Primero debes preregistrarte";
     return false;
   }
+
+  currentPlayerRowId = data.id;
+
+  console.log("PLAYER CARGADO:", data);
 
   welcomeText.innerText = `Bienvenido, ${currentPlayerName} 👑`;
   return true;
