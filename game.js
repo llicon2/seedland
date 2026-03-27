@@ -34,7 +34,8 @@ const tabSeeds = document.getElementById("tabSeeds");
 const menuFarmBtn = document.getElementById("menuFarmBtn");
 const menuSeedsBtn = document.getElementById("menuSeedsBtn");
 
-let currentPlayerId = null;
+let currentPlayerId = null;      // telegram_id
+let currentPlayerRowId = null;   // id interno de la tabla players
 let currentPlayerName = "Jugador";
 let selectedSlot = null;
 let currentSlots = [];
