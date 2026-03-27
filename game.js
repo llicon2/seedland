@@ -730,7 +730,7 @@ async function collectFromSlot(slot) {
   await loadSlots();
 }
 
-async function initGame() 
+async function initGame() {
   const ok = await loadPlayer();
   if (!ok) return;
 
@@ -740,20 +740,24 @@ async function initGame()
   await loadSeedShop();
   await loadSlots();
 
-if (!DEBUG_MOVE_SLOTS) {
-  setInterval(() => {
-    if (tabFarm.classList.contains("active")) {
-      renderSlots();
+  if (!DEBUG_MOVE_SLOTS) {
+    setInterval(() => {
+      if (tabFarm.classList.contains("active")) {
+        renderSlots();
 
-      if (!slotModal.classList.contains("hidden") && selectedSlot) {
-        const refreshedSlot = currentSlots.find(s => s.slot_index === selectedSlot.slot_index);
-        if (refreshedSlot) {
-          selectedSlot = refreshedSlot;
-          updateSlotModal();
+        if (!slotModal.classList.contains("hidden") && selectedSlot) {
+          const refreshedSlot = currentSlots.find(
+            s => s.slot_index === selectedSlot.slot_index
+          );
+
+          if (refreshedSlot) {
+            selectedSlot = refreshedSlot;
+            updateSlotModal();
+          }
         }
       }
-    }
-  }, 1000);
+    }, 1000);
+  }
 }
 
 initGame();
