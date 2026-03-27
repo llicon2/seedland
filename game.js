@@ -134,23 +134,39 @@ function getPendingProduction(slot) {
 }
 
 async function getPlayerCoins() {
+  if (!currentPlayerRowId) return 0;
+
   const { data, error } = await sb
     .from("players")
     .select("coins")
-    .eq("telegram_id", currentPlayerId)
+    .eq("id", currentPlayerRowId)
     .single();
 
-  if (error) return 0;
+  if (error) {
+    console.log("ERROR getPlayerCoins:", error);
+    return 0;
+  }
+
+  console.log("MONEDAS ACTUALES:", data?.coins);
   return data?.coins || 0;
 }
 
 async function setPlayerCoins(newCoins) {
-  const { error } = await sb
+  if (!currentPlayerRowId) return false;
+
+  const { data, error } = await sb
     .from("players")
     .update({ coins: newCoins })
-    .eq("telegram_id", currentPlayerId);
+    .eq("id", currentPlayerRowId)
+    .select();
 
-  return !error;
+  if (error) {
+    console.log("ERROR setPlayerCoins:", error);
+    return false;
+  }
+
+  console.log("MONEDAS ACTUALIZADAS:", data);
+  return true;
 }
 
 async function loadPlayer() {
