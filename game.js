@@ -547,11 +547,9 @@ button.addEventListener("click", () => {
     slotsLayer.appendChild(button);
   });
 
-  if (!selectedSlot && currentSlots.length > 0) {
-    selectedSlot = currentSlots[0];
-    updateSelectedSlotPanel();
-    renderSlots();
-  }
+ if (!selectedSlot && currentSlots.length > 0) {
+  selectedSlot = currentSlots[0];
+}
 }
 
 function updateSelectedSlotPanel() {
@@ -732,7 +730,7 @@ async function collectFromSlot(slot) {
   await loadSlots();
 }
 
-async function initGame() {
+async function initGame() 
   const ok = await loadPlayer();
   if (!ok) return;
 
