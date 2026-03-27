@@ -24,10 +24,22 @@ const seedPriceText = document.getElementById("seedPriceText");
 const buySeedBtn = document.getElementById("buySeedBtn");
 
 const slotsLayer = document.getElementById("slotsLayer");
+
 const slotInfoTitle = document.getElementById("slotInfoTitle");
 const slotInfoDesc = document.getElementById("slotInfoDesc");
 const slotActionBtn = document.getElementById("slotActionBtn");
 const gameStatus = document.getElementById("gameStatus");
+
+const slotModal = document.getElementById("slotModal");
+const closeSlotModalBtn = document.getElementById("closeSlotModalBtn");
+const slotModalPlant = document.getElementById("slotModalPlant");
+const slotModalTitle = document.getElementById("slotModalTitle");
+const slotModalDesc = document.getElementById("slotModalDesc");
+const slotModalRarity = document.getElementById("slotModalRarity");
+const slotModalRate = document.getElementById("slotModalRate");
+const slotModalState = document.getElementById("slotModalState");
+const slotModalWater = document.getElementById("slotModalWater");
+const slotModalActionBtn = document.getElementById("slotModalActionBtn");
 
 const tabFarm = document.getElementById("tabFarm");
 const tabSeeds = document.getElementById("tabSeeds");
@@ -78,6 +90,8 @@ const PLANT_POOL = [
 
 buySeedBtn.addEventListener("click", buySeed);
 slotActionBtn.addEventListener("click", handleSlotAction);
+slotModalActionBtn.addEventListener("click", handleSlotAction);
+closeSlotModalBtn.addEventListener("click", closeSlotModal);
 menuFarmBtn.addEventListener("click", () => switchTab("farm"));
 menuSeedsBtn.addEventListener("click", () => switchTab("seeds"));
 
@@ -358,6 +372,71 @@ function getPlantIcon(plantType) {
   const plant = PLANT_POOL.find(p => p.name === plantType);
   return plant?.icon || "🌱";
 }
+function openSlotModal(slot) {
+  selectedSlot = slot;
+  updateSlotModal();
+  slotModal.classList.remove("hidden");
+}
+
+function closeSlotModal() {
+  slotModal.classList.add("hidden");
+}
+function updateSlotModal() {
+  if (!selectedSlot) return;
+
+  if (!selectedSlot.is_unlocked) {
+    const cost = getSlotUnlockCost(selectedSlot.slot_index);
+
+    slotModalPlant.innerHTML = "🔒";
+    slotModalTitle.innerText = `Slot ${selectedSlot.slot_index}`;
+    slotModalDesc.innerText = `Este espacio está bloqueado.`;
+    slotModalRarity.innerText = "-";
+    slotModalRate.innerText = "-";
+    slotModalState.innerText = `Bloqueado (${cost} monedas)`;
+    slotModalWater.innerText = "No";
+    slotModalActionBtn.disabled = false;
+    slotModalActionBtn.innerText = `Desbloquear (${cost})`;
+    return;
+  }
+
+  if (!selectedSlot.plant_type) {
+    slotModalPlant.innerHTML = "🕳️";
+    slotModalTitle.innerText = `Slot ${selectedSlot.slot_index} vacío`;
+    slotModalDesc.innerText = `Aquí puedes plantar una semilla.`;
+    slotModalRarity.innerText = "-";
+    slotModalRate.innerText = "-";
+    slotModalState.innerText = "Vacío";
+    slotModalWater.innerText = "No";
+    slotModalActionBtn.disabled = false;
+    slotModalActionBtn.innerText = "Plantar semilla";
+    return;
+  }
+
+  const pending = getPendingProduction(selectedSlot);
+  const plant = PLANT_POOL.find(p => p.name === selectedSlot.plant_type);
+  const perHour = Math.floor((3600 / (selectedSlot.cycle_seconds || 30)) * (selectedSlot.production_rate || 0));
+
+  slotModalPlant.innerHTML = `<div style="font-size:88px;">${getPlantIcon(selectedSlot.plant_type)}</div>`;
+  slotModalTitle.innerText = selectedSlot.plant_type;
+  slotModalDesc.innerText = `Vista detallada de tu planta`;
+  slotModalRarity.innerText = selectedSlot.plant_rarity || "-";
+  slotModalRate.innerText = `${perHour} monedas`;
+  slotModalWater.innerText = "No";
+
+  if (pending > 0) {
+    slotModalState.innerText = `Lista para recolectar: ${pending}`;
+    slotModalActionBtn.disabled = false;
+    slotModalActionBtn.innerText = `Recolectar (${pending})`;
+  } else {
+    const cycle = plant?.cycle || selectedSlot.cycle_seconds || 30;
+    const elapsed = Math.floor((Date.now() - new Date(selectedSlot.last_collected_at).getTime()) / 1000);
+    const left = Math.max(0, cycle - elapsed);
+
+    slotModalState.innerText = `Produciendo · faltan ${formatSeconds(left)}`;
+    slotModalActionBtn.disabled = true;
+    slotModalActionBtn.innerText = "Produciendo...";
+  }
+}
 
 function getPlantImage(plantType) {
   const plant = PLANT_POOL.find(p => p.name === plantType);
@@ -457,12 +536,12 @@ function renderSlots() {
       `;
     }
 
-    button.addEventListener("click", () => {
-      if (isDraggingAnySlot) return;
-      selectedSlot = slot;
-      updateSelectedSlotPanel();
-      renderSlots();
-    });
+button.addEventListener("click", () => {
+  if (isDraggingAnySlot) return;
+  selectedSlot = slot;
+  renderSlots();
+  openSlotModal(slot);
+});
 
     enableDebugDrag(button, slot.slot_index);
     slotsLayer.appendChild(button);
@@ -663,14 +742,20 @@ async function initGame() {
   await loadSeedShop();
   await loadSlots();
 
-  if (!DEBUG_MOVE_SLOTS) {
-    setInterval(() => {
-      if (tabFarm.classList.contains("active")) {
-        updateSelectedSlotPanel();
-        renderSlots();
+if (!DEBUG_MOVE_SLOTS) {
+  setInterval(() => {
+    if (tabFarm.classList.contains("active")) {
+      renderSlots();
+
+      if (!slotModal.classList.contains("hidden") && selectedSlot) {
+        const refreshedSlot = currentSlots.find(s => s.slot_index === selectedSlot.slot_index);
+        if (refreshedSlot) {
+          selectedSlot = refreshedSlot;
+          updateSlotModal();
+        }
       }
-    }, 1000);
-  }
+    }
+  }, 1000);
 }
 
 initGame();
