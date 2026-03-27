@@ -387,7 +387,7 @@ function updateSlotModal() {
   if (!selectedSlot.is_unlocked) {
     const cost = getSlotUnlockCost(selectedSlot.slot_index);
 
-    slotModalPlant.innerHTML = "🔒";
+    slotModalPlant.innerHTML = `<div style="font-size:60px;">🔒</div>`;
     slotModalTitle.innerText = `Slot ${selectedSlot.slot_index}`;
     slotModalDesc.innerText = `Este espacio está bloqueado.`;
     slotModalRarity.innerText = "-";
@@ -400,7 +400,7 @@ function updateSlotModal() {
   }
 
   if (!selectedSlot.plant_type) {
-    slotModalPlant.innerHTML = "🕳️";
+    slotModalPlant.innerHTML = `<div style="font-size:60px;">🕳️</div>`;
     slotModalTitle.innerText = `Slot ${selectedSlot.slot_index} vacío`;
     slotModalDesc.innerText = `Aquí puedes plantar una semilla.`;
     slotModalRarity.innerText = "-";
@@ -416,9 +416,14 @@ function updateSlotModal() {
   const plant = PLANT_POOL.find(p => p.name === selectedSlot.plant_type);
   const perHour = Math.floor((3600 / (selectedSlot.cycle_seconds || 30)) * (selectedSlot.production_rate || 0));
 
-  slotModalPlant.innerHTML = `<div style="font-size:88px;">${getPlantIcon(selectedSlot.plant_type)}</div>`;
+  const plantImage = getPlantImage(selectedSlot.plant_type);
+
+slotModalPlant.innerHTML = plantImage
+  ? `<img class="slot-modal-plant-img" src="${plantImage}" alt="${selectedSlot.plant_type}">`
+  : `<div style="font-size:72px;">${getPlantIcon(selectedSlot.plant_type)}</div>`;
+
   slotModalTitle.innerText = selectedSlot.plant_type;
-  slotModalDesc.innerText = `Vista detallada de tu planta`;
+  slotModalDesc.innerText = `Estado actual de la planta`;
   slotModalRarity.innerText = selectedSlot.plant_rarity || "-";
   slotModalRate.innerText = `${perHour} monedas`;
   slotModalWater.innerText = "No";

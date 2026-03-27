@@ -292,7 +292,7 @@ body {
 .slot-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -307,34 +307,37 @@ body {
 .slot-modal-card {
   position: relative;
   width: 100%;
-  max-width: 360px;
-  background: linear-gradient(to bottom, #9edbff 0%, #9edbff 38%, #7cc65a 38%, #7cc65a 100%);
+  max-width: 330px;
+  background: linear-gradient(to bottom, #8fd0ff 0%, #8fd0ff 42%, #79c85b 42%, #79c85b 100%);
   border-radius: 24px;
-  padding: 22px 18px 18px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+  padding: 18px 18px 20px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.35);
   text-align: center;
   color: white;
+  overflow: hidden;
 }
 
 .slot-modal-close {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(0,0,0,0.18);
-  border: none;
-  color: white;
   width: 34px;
   height: 34px;
+  border: none;
   border-radius: 50%;
-  font-size: 16px;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
 }
 
 .slot-modal-plant-wrap {
-  background: rgba(0,0,0,0.15);
-  border-radius: 20px;
-  padding: 18px;
-  margin-bottom: 14px;
+  background: rgba(0,0,0,0.12);
+  border-radius: 18px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  padding: 20px;
   min-height: 150px;
   display: flex;
   align-items: center;
@@ -342,36 +345,52 @@ body {
 }
 
 .slot-modal-plant {
-  font-size: 88px;
-  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.35));
-}
-
-.slot-modal-title {
-  font-size: 30px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.slot-modal-desc {
-  font-size: 16px;
-  margin-bottom: 16px;
-  opacity: 0.96;
-}
-
-.slot-modal-stats {
-  background: rgba(255,255,255,0.10);
-  border-radius: 16px;
-  padding: 14px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-  text-align: left;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  font-size: 72px;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.35));
 }
 
 .slot-modal-plant-img {
   width: 110px;
-  height: auto;
+  max-height: 120px;
+  object-fit: contain;
   image-rendering: pixelated;
   filter: drop-shadow(0 4px 4px rgba(0,0,0,0.35));
+}
+
+.slot-modal-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+}
+
+.slot-modal-desc {
+  font-size: 14px;
+  margin-bottom: 14px;
+  opacity: 0.95;
+}
+
+.slot-modal-stats {
+  background: rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.slot-modal-stats strong {
+  color: #ffffff;
+}
+
+.slot-modal-card .main-btn {
+  margin-top: 4px;
 }
