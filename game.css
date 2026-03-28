@@ -320,7 +320,13 @@ body {
   position: relative;
   width: 100%;
   max-width: 330px;
-  background: linear-gradient(to bottom, #8fd0ff 0%, #8fd0ff 39%, #73bf57 39%, #69b24d 100%);
+    background: linear-gradient(
+    to bottom,
+    #7ec8ff 0%,
+    #7ec8ff 42%,
+    #6dbb4e 42%,
+    #5fa845 100%
+      );
   border-radius: 24px;
   padding: 14px 14px 16px;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
