@@ -80,11 +80,11 @@ const PLANT_POOL = [
   { key: "hierba_dorada",     name: "Hierba Dorada",      rarity: "Común",      rate: 3,  cycle: 45,  icon: "🌿", image: "images/plants/5hierba_dorada.png",     chance: 8 },
   { key: "flor_blanca",       name: "Flor Blanca",        rarity: "Común",      rate: 3,  cycle: 45,  icon: "🤍", image: "images/plants/6manzanilla.png",        chance: 8 },
   { key: "trigo_dorado",      name: "Trigo Dorado",       rarity: "Común",      rate: 3,  cycle: 50,  icon: "🌾", image: "images/plants/7trigo.png",              chance: 7 },
-  { key: "loto_rosa",         name: "Loto Rosa",          rarity: "Rara",       rate: 3,  cycle: 50,  icon: "🌸", image: "images/plants/8loto_rosado.png",        chance: 5 },
-  { key: "margarita_azul",    name: "Margarita Azul",     rarity: "Rara",       rate: 4,  cycle: 55,  icon: "🌼", image: "images/plants/9margarita_azul.png",     chance: 3 },
-  { key: "rabano_rojo",       name: "Rábano Rojo",        rarity: "Rara",       rate: 6,  cycle: 65,  icon: "❤️", image: "images/plants/10Rabano.png",            chance: 2 },
-  { key: "planta_cristalina", name: "Planta Cristalina",  rarity: "Épica",      rate: 10, cycle: 80,  icon: "✨", image: "images/plants/11planta_cristalina.png", chance: 1.2 },
-  { key: "cristal_arcoiris",  name: "Cristal Arcoíris",   rarity: "Legendaria", rate: 14, cycle: 95,  icon: "🌈", image: "images/plants/12cristal_arcoiris.png",  chance: 0.6 }
+  { key: "loto_rosa",         name: "Loto Rosa",          rarity: "Común",       rate: 3,  cycle: 50,  icon: "🌸", image: "images/plants/8loto_rosado.png",        chance: 5 },
+  { key: "margarita_azul",    name: "Margarita Azul",     rarity: "Común",       rate: 4,  cycle: 55,  icon: "🌼", image: "images/plants/9margarita_azul.png",     chance: 3 },
+  { key: "rabano_rojo",       name: "Rábano Rojo",        rarity: "Común",       rate: 6,  cycle: 65,  icon: "❤️", image: "images/plants/10Rabano.png",            chance: 2 },
+  { key: "planta_cristalina", name: "Planta Cristalina",  rarity: "Común",      rate: 10, cycle: 80,  icon: "✨", image: "images/plants/11planta_cristalina.png", chance: 1.2 },
+  { key: "cristal_arcoiris",  name: "Cristal Arcoíris",   rarity: "Común", rate: 14, cycle: 95,  icon: "🌈", image: "images/plants/12cristal_arcoiris.png",  chance: 0.6 }
 ];
 
 buySeedBtn?.addEventListener("click", buySeed);
