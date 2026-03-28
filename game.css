@@ -102,7 +102,7 @@ body {
 
 .slot-spot.selected {
   box-shadow: 0 0 0 3px #ffe082, 0 0 12px rgba(255, 224, 130, 0.6);
-  background: rgba(255, 236, 179, 0.1);
+  background: rgba(255, 236, 179, 0.10);
 }
 
 .slot-spot.locked {
@@ -114,7 +114,7 @@ body {
 }
 
 .slot-spot.planted {
-  background: rgba(87, 189, 91, 0.1);
+  background: rgba(87, 189, 91, 0.10);
 }
 
 .slot-spot.ready {
@@ -199,7 +199,7 @@ body {
 
 .main-btn {
   width: 100%;
-  background: linear-gradient(#59d65f, #2f9f39);
+  background: linear-gradient(to bottom, #42d75a, #27a63b);
   border: none;
   padding: 14px 16px;
   border-radius: 14px;
@@ -207,17 +207,19 @@ body {
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
 }
 
 .main-btn:hover {
   transform: translateY(-1px);
+  filter: brightness(1.03);
 }
 
 .main-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+  filter: none;
 }
 
 .status-text {
@@ -320,20 +322,20 @@ body {
   position: relative;
   width: 100%;
   max-width: 330px;
-    background: linear-gradient(
+  background: linear-gradient(
     to bottom,
-    #7ec8ff 0%,
-    #7ec8ff 42%,
-    #6dbb4e 42%,
-    #5fa845 100%
-      );
+    #86ccff 0%,
+    #86ccff 42%,
+    #9d7547 42%,
+    #7f5a34 100%
+  );
   border-radius: 24px;
   padding: 14px 14px 16px;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
   text-align: center;
   color: white;
   overflow: hidden;
-  border: 2px solid rgba(255,255,255,0.14);
+  border: 2px solid rgba(255, 255, 255, 0.14);
 }
 
 .slot-modal-close {
@@ -367,8 +369,8 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   box-shadow:
-    inset 0 0 0 2px rgba(255,255,255,0.08),
-    0 8px 18px rgba(0,0,0,0.18);
+    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+    0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 .slot-modal-plant-wrap::before {
@@ -377,8 +379,8 @@ body {
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(255,255,255,0.04) 0%,
-    rgba(0,0,0,0.04) 100%
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(0, 0, 0, 0.04) 100%
   );
   z-index: 1;
 }
@@ -407,7 +409,7 @@ body {
   font-size: 17px;
   font-weight: 900;
   margin-bottom: 4px;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.18);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.18);
 }
 
 .slot-modal-subtitle {
@@ -425,11 +427,11 @@ body {
 }
 
 .slot-stat-card {
-  background: rgba(255,255,255,0.16);
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 16px;
   padding: 10px 12px;
   text-align: left;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .slot-stat-label {
@@ -449,25 +451,6 @@ body {
   margin-top: 2px;
 }
 
-@media (max-width: 480px) {
-  .slot-modal-card {
-    max-width: 94vw;
-  }
-
-  .slot-modal-plant-wrap {
-    min-height: 228px;
-  }
-
-  .slot-modal-plant {
-    min-height: 228px;
-  }
-
-  .slot-modal-plant-img {
-    width: 190px;
-    max-height: 190px;
-  }
-}
-
 /* MOBILE */
 @media (max-width: 480px) {
   .game-shell {
@@ -485,28 +468,35 @@ body {
 
   .slot-modal-card {
     max-width: 94vw;
-    padding: 16px 16px 18px;
+    padding: 14px 14px 16px;
   }
 
   .slot-modal-plant-wrap {
-    min-height: 200px;
+    min-height: 228px;
   }
 
   .slot-modal-plant {
-    min-height: 200px;
-    font-size: 78px;
+    min-height: 228px;
   }
 
   .slot-modal-plant-img {
-    width: 145px;
-    max-height: 145px;
+    width: 190px;
+    max-height: 190px;
   }
 
   .slot-modal-title {
-    font-size: 20px;
+    font-size: 18px;
   }
 
-  .slot-modal-stats {
+  .slot-modal-subtitle {
+    font-size: 11px;
+  }
+
+  .slot-stat-label {
+    font-size: 10px;
+  }
+
+  .slot-stat-value {
     font-size: 13px;
   }
 
