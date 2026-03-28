@@ -159,8 +159,22 @@ function getPlantImage(plantType) {
 }
 
 function getSlotWaterPercent(slot) {
-  if (typeof slot.water_percent === "number") return slot.water_percent;
-  return 100;
+  const sourceDate =
+    slot.last_watered_at ||
+    slot.planted_at ||
+    slot.last_collected_at;
+
+  if (!sourceDate) return 100;
+
+  const lastWateredMs = new Date(sourceDate).getTime();
+  const nowMs = Date.now();
+  const hoursPassed = (nowMs - lastWateredMs) / (1000 * 60 * 60);
+
+  // Baja 10% por hora
+  const waterLost = hoursPassed * 10;
+  const water = Math.max(0, Math.round(100 - waterLost));
+
+  return water;
 }
 
 function hasCrowOnSlot(slot) {
@@ -168,7 +182,7 @@ function hasCrowOnSlot(slot) {
 }
 
 function needsWater(slot) {
-  return getSlotWaterPercent(slot) <= 30;
+  return getSlotWaterPercent(slot) <= 20;
 }
 
 function getSlotStatusLabel(slot) {
@@ -508,15 +522,15 @@ function updateSlotModal() {
   slotModalRate.innerText = `${perHour}`;
   slotModalWater.innerText = `${water}%`;
 
-  if (crow) {
-    slotModalState.innerText = "Cuervo bloqueando";
-    return;
-  }
+if (crow) {
+  slotModalState.innerText = "Cuervo";
+  return;
+}
 
-  if (needsWater(selectedSlot)) {
-    slotModalState.innerText = "Necesita agua";
-    return;
-  }
+if (needsWater(selectedSlot)) {
+  slotModalState.innerText = "Seca";
+  return;
+}
 
   if (pending > 0) {
     slotModalState.innerText = `Lista · ${pending}`;
@@ -769,15 +783,16 @@ async function plantSeedInSlot(slot) {
   const { error: slotUpdateError } = await sb
     .from("farm_slots")
     .update({
-      plant_type: plant.name,
-      plant_rarity: plant.rarity,
-      production_rate: plant.rate,
-      cycle_seconds: plant.cycle,
-      planted_at: nowIso,
-      last_collected_at: nowIso,
-      water_percent: 100,
-      has_crow: false
-    })
+  plant_type: plant.name,
+  plant_rarity: plant.rarity,
+  production_rate: plant.rate,
+  cycle_seconds: plant.cycle,
+  planted_at: nowIso,
+  last_collected_at: nowIso,
+  last_watered_at: nowIso,
+  water_percent: 100,
+  has_crow: false
+})
     .eq("id", slot.id);
 
   if (slotUpdateError) {
@@ -806,7 +821,8 @@ async function waterSlot(slot) {
   const { error } = await sb
     .from("farm_slots")
     .update({
-      water_percent: 100
+      water_percent: 100,
+      last_watered_at: new Date().toISOString()
     })
     .eq("id", slot.id);
 
