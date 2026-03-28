@@ -83,17 +83,17 @@ const PLANT_POOL = [
   { key: "white_flower", name: "Flor Blanca", rarity: "Común", rate: 3, cycle: 50, icon: "🤍", image: "images/plants/8loto_rosado.png", chance: 5 },
   { key: "root_bulb", name: "Bulbo Raíz", rarity: "Común", rate: 4, cycle: 55, icon: "🥔", image: "images/plants/9margarita_azul.png", chance: 3 },
   { key: "blue_crystal", name: "Cristal Azul", rarity: "Común", rate: 6, cycle: 65, icon: "💎", image: "images/plants/10Rabano.png", chance: 2 },
-  { key: "rainbow_crystal", name: "Cristal Arcoíris", rarity: "Común", rate: 10, cycle: 80, icon: "🌈", image: "images/plants/epica_1.png", chance: 1.2 },
-  { key: "pink_lotus", name: "Loto Rosa", rarity: "Común", rate: 14, cycle: 95, icon: "🌸", image: "images/plants/11planta_cristalina.png", chance: 0.6 },
-  { key: "mythic_seed", name: "Semilla Mítica", rarity: "Común", rate: 22, cycle: 120, icon: "✨", image: "images/plants/12cristal_arcoiris.png", chance: 0.2 }
+  { key: "rainbow_crystal", name: "Cristal Arcoíris", rarity: "Épica", rate: 10, cycle: 80, icon: "🌈", image: "images/plants/epica_1.png", chance: 1.2 },
+  { key: "pink_lotus", name: "Loto Rosa", rarity: "Legendaria", rate: 14, cycle: 95, icon: "🌸", image: "images/plants/11planta_cristalina.png", chance: 0.6 },
+  { key: "mythic_seed", name: "Semilla Mítica", rarity: "Mítica", rate: 22, cycle: 120, icon: "✨", image: "images/plants/12cristal_arcoiris.png", chance: 0.2 }
 ];
 
-buySeedBtn.addEventListener("click", buySeed);
-slotActionBtn.addEventListener("click", handleSlotAction);
-slotModalActionBtn.addEventListener("click", handleSlotAction);
-closeSlotModalBtn.addEventListener("click", closeSlotModal);
-menuFarmBtn.addEventListener("click", () => switchTab("farm"));
-menuSeedsBtn.addEventListener("click", () => switchTab("seeds"));
+buySeedBtn?.addEventListener("click", buySeed);
+slotActionBtn?.addEventListener("click", handleSlotAction);
+slotModalActionBtn?.addEventListener("click", handleSlotAction);
+closeSlotModalBtn?.addEventListener("click", closeSlotModal);
+menuFarmBtn?.addEventListener("click", () => switchTab("farm"));
+menuSeedsBtn?.addEventListener("click", () => switchTab("seeds"));
 
 function getTelegramUser() {
   return tg.initDataUnsafe?.user || null;
@@ -138,6 +138,8 @@ function formatSeconds(seconds) {
 
 function getPendingProduction(slot) {
   if (!slot.plant_type || !slot.last_collected_at) return 0;
+  if (hasCrowOnSlot(slot)) return 0;
+  if (needsWater(slot)) return 0;
 
   const now = Date.now();
   const last = new Date(slot.last_collected_at).getTime();
@@ -145,6 +147,90 @@ function getPendingProduction(slot) {
 
   const cycles = Math.floor((now - last) / cycleMs);
   return Math.max(0, cycles * (slot.production_rate || 0));
+}
+
+function getPlantIcon(plantType) {
+  const plant = PLANT_POOL.find(p => p.name === plantType);
+  return plant?.icon || "🌱";
+}
+
+function getPlantImage(plantType) {
+  const plant = PLANT_POOL.find(p => p.name === plantType);
+  return plant?.image || "";
+}
+
+function getSlotWaterPercent(slot) {
+  if (typeof slot.water_percent === "number") return slot.water_percent;
+  return 100;
+}
+
+function hasCrowOnSlot(slot) {
+  return slot.has_crow === true;
+}
+
+function needsWater(slot) {
+  return getSlotWaterPercent(slot) <= 30;
+}
+
+function getSlotStatusLabel(slot) {
+  if (!slot.is_unlocked) return "Bloqueado";
+  if (!slot.plant_type) return "Vacío";
+  if (hasCrowOnSlot(slot)) return "Cuervo";
+  if (needsWater(slot)) return "Seca";
+
+  const pending = getPendingProduction(slot);
+  if (pending > 0) return "Lista";
+
+  return "Produciendo";
+}
+
+function getPrimaryActionForSlot(slot) {
+  if (!slot.is_unlocked) {
+    return {
+      key: "unlock",
+      label: `Desbloquear (${getSlotUnlockCost(slot.slot_index)})`,
+      disabled: false
+    };
+  }
+
+  if (!slot.plant_type) {
+    return {
+      key: "plant",
+      label: "Plantar semilla",
+      disabled: false
+    };
+  }
+
+  if (hasCrowOnSlot(slot)) {
+    return {
+      key: "crow",
+      label: "Espantar cuervo",
+      disabled: false
+    };
+  }
+
+  if (needsWater(slot)) {
+    return {
+      key: "water",
+      label: "Regar planta",
+      disabled: false
+    };
+  }
+
+  const pending = getPendingProduction(slot);
+  if (pending > 0) {
+    return {
+      key: "collect",
+      label: `Recolectar (${pending})`,
+      disabled: false
+    };
+  }
+
+  return {
+    key: "wait",
+    label: "Produciendo...",
+    disabled: true
+  };
 }
 
 async function getPlayerCoins() {
@@ -161,25 +247,22 @@ async function getPlayerCoins() {
     return 0;
   }
 
-  console.log("MONEDAS ACTUALES:", data?.coins);
   return data?.coins || 0;
 }
 
 async function setPlayerCoins(newCoins) {
   if (!currentPlayerRowId) return false;
 
-  const { data, error } = await sb
+  const { error } = await sb
     .from("players")
     .update({ coins: newCoins })
-    .eq("id", currentPlayerRowId)
-    .select();
+    .eq("id", currentPlayerRowId);
 
   if (error) {
     console.log("ERROR setPlayerCoins:", error);
     return false;
   }
 
-  console.log("MONEDAS ACTUALIZADAS:", data);
   return true;
 }
 
@@ -206,9 +289,6 @@ async function loadPlayer() {
   }
 
   currentPlayerRowId = data.id;
-
-  console.log("PLAYER CARGADO:", data);
-
   welcomeText.innerText = `Bienvenido, ${currentPlayerName} 👑`;
   return true;
 }
@@ -243,7 +323,9 @@ async function ensureSlots() {
       await sb.from("farm_slots").insert({
         player_id: currentPlayerId,
         slot_index: i,
-        is_unlocked: i === 1
+        is_unlocked: i === 1,
+        water_percent: 100,
+        has_crow: false
       });
     }
   }
@@ -368,10 +450,6 @@ async function loadSlots() {
   renderSlots();
 }
 
-function getPlantIcon(plantType) {
-  const plant = PLANT_POOL.find(p => p.name === plantType);
-  return plant?.icon || "🌱";
-}
 function openSlotModal(slot) {
   selectedSlot = slot;
   updateSlotModal();
@@ -381,71 +459,76 @@ function openSlotModal(slot) {
 function closeSlotModal() {
   slotModal.classList.add("hidden");
 }
+
 function updateSlotModal() {
   if (!selectedSlot) return;
 
-  if (!selectedSlot.is_unlocked) {
-    const cost = getSlotUnlockCost(selectedSlot.slot_index);
+  const action = getPrimaryActionForSlot(selectedSlot);
+  const water = getSlotWaterPercent(selectedSlot);
+  const crow = hasCrowOnSlot(selectedSlot);
+  const status = getSlotStatusLabel(selectedSlot);
 
-    slotModalPlant.innerHTML = `<div style="font-size:60px;">🔒</div>`;
+  slotModalActionBtn.dataset.action = action.key;
+  slotModalActionBtn.disabled = action.disabled;
+  slotModalActionBtn.innerText = action.label;
+
+  if (!selectedSlot.is_unlocked) {
+    slotModalPlant.innerHTML = `<div style="font-size:72px;">🔒</div>`;
     slotModalTitle.innerText = `Slot ${selectedSlot.slot_index}`;
-    slotModalDesc.innerText = `Este espacio está bloqueado.`;
+    slotModalDesc.innerText = "Espacio bloqueado";
     slotModalRarity.innerText = "-";
     slotModalRate.innerText = "-";
-    slotModalState.innerText = `Bloqueado (${cost} monedas)`;
-    slotModalWater.innerText = "No";
-    slotModalActionBtn.disabled = false;
-    slotModalActionBtn.innerText = `Desbloquear (${cost})`;
+    slotModalState.innerText = "Bloqueado";
+    slotModalWater.innerText = "-";
     return;
   }
 
   if (!selectedSlot.plant_type) {
-    slotModalPlant.innerHTML = `<div style="font-size:60px;">🕳️</div>`;
-    slotModalTitle.innerText = `Slot ${selectedSlot.slot_index} vacío`;
-    slotModalDesc.innerText = `Aquí puedes plantar una semilla.`;
+    slotModalPlant.innerHTML = `<div style="font-size:72px;">🕳️</div>`;
+    slotModalTitle.innerText = `Slot ${selectedSlot.slot_index}`;
+    slotModalDesc.innerText = "Espacio vacío";
     slotModalRarity.innerText = "-";
     slotModalRate.innerText = "-";
     slotModalState.innerText = "Vacío";
-    slotModalWater.innerText = "No";
-    slotModalActionBtn.disabled = false;
-    slotModalActionBtn.innerText = "Plantar semilla";
+    slotModalWater.innerText = "-";
     return;
   }
 
-  const pending = getPendingProduction(selectedSlot);
   const plant = PLANT_POOL.find(p => p.name === selectedSlot.plant_type);
+  const pending = getPendingProduction(selectedSlot);
+  const plantImage = getPlantImage(selectedSlot.plant_type);
   const perHour = Math.floor((3600 / (selectedSlot.cycle_seconds || 30)) * (selectedSlot.production_rate || 0));
 
-  const plantImage = getPlantImage(selectedSlot.plant_type);
-
-slotModalPlant.innerHTML = plantImage
-  ? `<img class="slot-modal-plant-img" src="${plantImage}" alt="${selectedSlot.plant_type}">`
-  : `<div style="font-size:72px;">${getPlantIcon(selectedSlot.plant_type)}</div>`;
+  slotModalPlant.innerHTML = plantImage
+    ? `<img class="slot-modal-plant-img" src="${plantImage}" alt="${selectedSlot.plant_type}">`
+    : `<div style="font-size:84px;">${getPlantIcon(selectedSlot.plant_type)}</div>`;
 
   slotModalTitle.innerText = selectedSlot.plant_type;
-  slotModalDesc.innerText = `Estado actual de la planta`;
+  slotModalDesc.innerText = `${selectedSlot.plant_rarity || "Común"} · ${status}`;
   slotModalRarity.innerText = selectedSlot.plant_rarity || "-";
-  slotModalRate.innerText = `${perHour} monedas`;
-  slotModalWater.innerText = "No";
+  slotModalRate.innerText = `${perHour}`;
+  slotModalWater.innerText = `${water}%`;
+
+  if (crow) {
+    slotModalState.innerText = "Cuervo bloqueando";
+    return;
+  }
+
+  if (needsWater(selectedSlot)) {
+    slotModalState.innerText = "Necesita agua";
+    return;
+  }
 
   if (pending > 0) {
-    slotModalState.innerText = `Lista para recolectar: ${pending}`;
-    slotModalActionBtn.disabled = false;
-    slotModalActionBtn.innerText = `Recolectar (${pending})`;
-  } else {
-    const cycle = plant?.cycle || selectedSlot.cycle_seconds || 30;
-    const elapsed = Math.floor((Date.now() - new Date(selectedSlot.last_collected_at).getTime()) / 1000);
-    const left = Math.max(0, cycle - elapsed);
-
-    slotModalState.innerText = `Produciendo · faltan ${formatSeconds(left)}`;
-    slotModalActionBtn.disabled = true;
-    slotModalActionBtn.innerText = "Produciendo...";
+    slotModalState.innerText = `Lista · ${pending}`;
+    return;
   }
-}
 
-function getPlantImage(plantType) {
-  const plant = PLANT_POOL.find(p => p.name === plantType);
-  return plant?.image || "";
+  const cycle = plant?.cycle || selectedSlot.cycle_seconds || 30;
+  const elapsed = Math.floor((Date.now() - new Date(selectedSlot.last_collected_at).getTime()) / 1000);
+  const left = Math.max(0, cycle - elapsed);
+
+  slotModalState.innerText = `En ${formatSeconds(left)}`;
 }
 
 function enableDebugDrag(slotElement, slotId) {
@@ -528,7 +611,7 @@ function renderSlots() {
     } else if (!slot.plant_type) {
       button.classList.add("empty");
       button.innerHTML = `<div class="slot-inner"></div>`;
-        } else {
+    } else {
       const pending = getPendingProduction(slot);
       const plantImage = getPlantImage(slot.plant_type);
 
@@ -541,20 +624,20 @@ function renderSlots() {
       `;
     }
 
-button.addEventListener("click", () => {
-  if (isDraggingAnySlot) return;
-  selectedSlot = slot;
-  renderSlots();
-  openSlotModal(slot);
-});
+    button.addEventListener("click", () => {
+      if (isDraggingAnySlot) return;
+      selectedSlot = slot;
+      renderSlots();
+      openSlotModal(slot);
+    });
 
     enableDebugDrag(button, slot.slot_index);
     slotsLayer.appendChild(button);
   });
 
- if (!selectedSlot && currentSlots.length > 0) {
-  selectedSlot = currentSlots[0];
-}
+  if (!selectedSlot && currentSlots.length > 0) {
+    selectedSlot = currentSlots[0];
+  }
 }
 
 function updateSelectedSlotPanel() {
@@ -606,17 +689,32 @@ function updateSelectedSlotPanel() {
 async function handleSlotAction() {
   if (!selectedSlot) return;
 
-  if (!selectedSlot.is_unlocked) {
+  const action = slotModalActionBtn?.dataset.action || getPrimaryActionForSlot(selectedSlot).key;
+
+  if (action === "unlock") {
     await unlockSlot(selectedSlot);
     return;
   }
 
-  if (!selectedSlot.plant_type) {
+  if (action === "plant") {
     await plantSeedInSlot(selectedSlot);
     return;
   }
 
-  await collectFromSlot(selectedSlot);
+  if (action === "collect") {
+    await collectFromSlot(selectedSlot);
+    return;
+  }
+
+  if (action === "water") {
+    await waterSlot(selectedSlot);
+    return;
+  }
+
+  if (action === "crow") {
+    await removeCrowFromSlot(selectedSlot);
+    return;
+  }
 }
 
 async function unlockSlot(slot) {
@@ -677,7 +775,9 @@ async function plantSeedInSlot(slot) {
       production_rate: plant.rate,
       cycle_seconds: plant.cycle,
       planted_at: nowIso,
-      last_collected_at: nowIso
+      last_collected_at: nowIso,
+      water_percent: 100,
+      has_crow: false
     })
     .eq("id", slot.id);
 
@@ -701,7 +801,55 @@ async function plantSeedInSlot(slot) {
   await loadSlots();
 }
 
+async function waterSlot(slot) {
+  if (!slot || !slot.id) return;
+
+  const { error } = await sb
+    .from("farm_slots")
+    .update({
+      water_percent: 100
+    })
+    .eq("id", slot.id);
+
+  if (error) {
+    gameStatus.innerText = "❌ No se pudo regar la planta";
+    return;
+  }
+
+  gameStatus.innerText = `💧 Regaste ${slot.plant_type}`;
+  await loadSlots();
+}
+
+async function removeCrowFromSlot(slot) {
+  if (!slot || !slot.id) return;
+
+  const { error } = await sb
+    .from("farm_slots")
+    .update({
+      has_crow: false
+    })
+    .eq("id", slot.id);
+
+  if (error) {
+    gameStatus.innerText = "❌ No se pudo espantar el cuervo";
+    return;
+  }
+
+  gameStatus.innerText = `🐦 Espantaste el cuervo de ${slot.plant_type}`;
+  await loadSlots();
+}
+
 async function collectFromSlot(slot) {
+  if (hasCrowOnSlot(slot)) {
+    gameStatus.innerText = "🐦 Hay un cuervo bloqueando la producción";
+    return;
+  }
+
+  if (needsWater(slot)) {
+    gameStatus.innerText = "💧 La planta necesita agua antes de producir";
+    return;
+  }
+
   const pending = getPendingProduction(slot);
 
   if (pending <= 0) {
