@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>SeedLand Game</title>
-  <link rel="stylesheet" href="game.css?v=2">
+  <link rel="stylesheet" href="game.css?v=5">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
@@ -40,18 +40,33 @@
   <div class="slot-modal-card">
     <button id="closeSlotModalBtn" class="slot-modal-close">✖</button>
 
-    <div id="slotModalPlantWrap" class="slot-modal-plant-wrap">
+    <div class="slot-modal-plant-wrap">
       <div id="slotModalPlant" class="slot-modal-plant">🌱</div>
     </div>
 
     <div id="slotModalTitle" class="slot-modal-title">Planta</div>
-    <div id="slotModalDesc" class="slot-modal-desc">Información de la planta</div>
+    <div id="slotModalDesc" class="slot-modal-subtitle">Común · Produciendo</div>
 
-    <div class="slot-modal-stats">
-      <div><strong>Rareza:</strong> <span id="slotModalRarity">-</span></div>
-      <div><strong>Producción/hora:</strong> <span id="slotModalRate">-</span></div>
-      <div><strong>Estado:</strong> <span id="slotModalState">-</span></div>
-      <div><strong>Agua:</strong> <span id="slotModalWater">No</span></div>
+    <div class="slot-modal-stats-grid">
+      <div class="slot-stat-card">
+        <div class="slot-stat-label">Rareza</div>
+        <div id="slotModalRarity" class="slot-stat-value">-</div>
+      </div>
+
+      <div class="slot-stat-card">
+        <div class="slot-stat-label">Prod/h</div>
+        <div id="slotModalRate" class="slot-stat-value">-</div>
+      </div>
+
+      <div class="slot-stat-card">
+        <div class="slot-stat-label">Estado</div>
+        <div id="slotModalState" class="slot-stat-value">-</div>
+      </div>
+
+      <div class="slot-stat-card">
+        <div class="slot-stat-label">Agua</div>
+        <div id="slotModalWater" class="slot-stat-value">-</div>
+      </div>
     </div>
 
     <button id="slotModalActionBtn" class="main-btn">Acción</button>
