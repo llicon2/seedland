@@ -1,93 +1,356 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>SeedLand Pre-registro</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<title>SeedLand Pre-registro</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+
+/* fondo general */
+body{
+margin:0;
+font-family:system-ui;
+text-align:center;
+padding:18px;
+background:
+radial-gradient(circle at top,#0b2e1c,#071c12);
+color:white;
+}
+
+/* banner */
+.header{
+margin-bottom:18px;
+}
+
+.banner{
+width:100%;
+border-radius:18px;
+box-shadow:0 8px 25px rgba(0,0,0,0.4);
+margin-bottom:12px;
+}
+
+.title-box{
+background:rgba(0,0,0,0.35);
+padding:14px;
+border-radius:14px;
+}
+
+/* botones */
+button{
+font-size:16px;
+border:none;
+border-radius:12px;
+padding:12px;
+cursor:pointer;
+transition:0.15s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* boton preregistro */
+#btn{
+background:linear-gradient(#5edc84,#2ea043);
+color:white;
+font-weight:bold;
+width:100%;
+margin-top:10px;
+}
+
+/* boton entrar */
+.main-btn{
+background:linear-gradient(#5edc84,#2ea043);
+color:white;
+font-weight:bold;
+width:100%;
+}
+
+/* boton canal */
+.secondary-btn{
+display:inline-block;
+text-decoration:none;
+text-align:center;
+background:linear-gradient(#66b3ff,#2e8fe0);
+color:white;
+border-radius:12px;
+padding:12px;
+}
+
+/* cajas */
+.access-box{
+margin-top:16px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.closed-access-box{
+background:rgba(255,255,255,0.08);
+border-radius:16px;
+padding:14px;
+}
+
+.closed-title{
+font-size:18px;
+font-weight:bold;
+margin-bottom:6px;
+}
+
+.closed-desc{
+font-size:14px;
+opacity:0.95;
+}
+
+/* recompensas */
+#rewardsBox{
+margin-top:12px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.reward-card{
+display:flex;
+align-items:center;
+background:rgba(255,255,255,0.06);
+padding:10px;
+border-radius:14px;
+gap:10px;
+}
+
+.reward-icon{
+width:48px;
+height:48px;
+image-rendering:pixelated;
+}
+
+.reward-info{
+text-align:left;
+}
+
+.reward-title{
+font-weight:bold;
+}
+
+.reward-sub{
+opacity:0.8;
+font-size:13px;
+}
+
+/* items */
+#myItems{
+margin-top:10px;
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+hr{
+opacity:0.2;
+margin:30px 0;
+}
+
+</style>
+
 </head>
+
 <body>
 
-  <h1>🌱 SeedLand</h1>
-  <p>Pre-regístrate y recibe recompensas cuando el juego abra</p>
+<!-- banner -->
+<div class="header">
 
-  <p>Jugadores preregistrados:</p>
-  <h2 id="count">0</h2>
+<img src="images/banner.png" class="banner">
 
-  <button id="btn">🚀 Pre-registrarme</button>
+<div class="title-box">
+<h1>🌱 SeedLand</h1>
 
-  <p id="status"></p>
-  <p id="invitedBy"></p>
-  <div id="accessBox" class="access-box">
-  <button id="enterGameBtn" class="main-btn">
-    🎮 Entrar al juego
-  </button>
+<p>
+Pre-regístrate y recibe recompensas cuando el juego abra
+</p>
 
-  <div id="closedAccessBox" class="closed-access-box" style="display:none;">
-    <div class="closed-title">🔒 Acceso anticipado cerrado</div>
-    <div class="closed-desc">
-      El juego todavía está en pruebas privadas.  
-      Sigue el canal oficial para enterarte del lanzamiento.
-    </div>
-  </div>
-
-  <a id="channelBtn" class="main-btn secondary-btn" href="https://t.me/seedland_news" target="_blank">
-    📢 Ir al canal oficial
-  </a>
 </div>
 
-  <hr style="margin: 30px 0; opacity: 0.25;">
+</div>
 
-  <h3>🎁 Invita amigos</h3>
-  <p>Tus referidos: <span id="myRefCount">0</span></p>
-  <button id="copyRefBtn">📨 Copiar link de referido</button>
-  <p id="refLink" style="word-break: break-all; margin-top: 12px;"></p>
+<!-- contador -->
+<p>Jugadores preregistrados</p>
 
-  <hr style="margin: 30px 0; opacity: 0.25;">
+<h2 id="count">0</h2>
 
-  <h2>🎁 Invita y desbloquea ventajas</h2>
-  <p>Invita amigos y gana ventajas exclusivas para el lanzamiento 🚀</p>
+<button id="btn">
+🚀 Pre-registrarme
+</button>
 
-  <div id="rewardsBox">
-    <div class="reward-card">
-      <img src="images/crow-radar.png" alt="Radar de Cuervos" class="reward-icon">
-      <div class="reward-info">
-        <div class="reward-title">Radar de Cuervos</div>
-        <div class="reward-sub">3 amigos invitados</div>
-      </div>
-    </div>
+<p id="status"></p>
 
-    <div class="reward-card">
-      <img src="images/fox-tracker.png" alt="Rastreador de Zorros" class="reward-icon">
-      <div class="reward-info">
-        <div class="reward-title">Rastreador de Zorros</div>
-        <div class="reward-sub">5 amigos invitados</div>
-      </div>
-    </div>
+<p id="invitedBy"></p>
 
-    <div class="reward-card">
-      <img src="images/scarecrow.png" alt="Espantapájaros" class="reward-icon">
-      <div class="reward-info">
-        <div class="reward-title">Espantapájaros</div>
-        <div class="reward-sub">10 amigos invitados · 12h</div>
-      </div>
-    </div>
+<!-- acceso -->
+<div id="accessBox" class="access-box">
 
-    <div class="reward-card">
-      <img src="images/fox-repellent.png" alt="Espanta Zorros" class="reward-icon">
-      <div class="reward-info">
-        <div class="reward-title">Espanta Zorros</div>
-        <div class="reward-sub">20 amigos invitados · 12h</div>
-      </div>
-    </div>
-  </div>
+<button id="enterGameBtn" class="main-btn">
+🎮 Entrar al juego
+</button>
 
-  <p id="nextReward"></p>
+<div id="closedAccessBox" class="closed-access-box" style="display:none;">
 
-  <h3>🎒 Tus recompensas desbloqueadas</h3>
-  <div id="myItems"></div>
+<div class="closed-title">
+🔒 Acceso anticipado cerrado
+</div>
 
-  <script src="app.js"></script>
+<div class="closed-desc">
+El juego todavía está en pruebas privadas.
+Sigue el canal oficial para enterarte del lanzamiento.
+</div>
+
+</div>
+
+<a
+id="channelBtn"
+class="secondary-btn"
+href="https://t.me/seedland_news"
+target="_blank">
+
+📢 Ir al canal oficial
+
+</a>
+
+</div>
+
+<hr>
+
+<!-- referidos -->
+
+<h3>
+🎁 Invita amigos
+</h3>
+
+<p>
+Tus referidos:
+<span id="myRefCount">0</span>
+</p>
+
+<button id="copyRefBtn">
+
+📨 Copiar link de referido
+
+</button>
+
+<p id="refLink"></p>
+
+<hr>
+
+<!-- recompensas -->
+
+<h2>
+🎁 Invita y desbloquea ventajas
+</h2>
+
+<p>
+Invita amigos y gana ventajas exclusivas para el lanzamiento
+</p>
+
+<div id="rewardsBox">
+
+<div class="reward-card">
+
+<img
+src="images/crow-radar.png"
+class="reward-icon">
+
+<div class="reward-info">
+
+<div class="reward-title">
+Radar de Cuervos
+</div>
+
+<div class="reward-sub">
+3 amigos invitados
+</div>
+
+</div>
+
+</div>
+
+<div class="reward-card">
+
+<img
+src="images/fox-tracker.png"
+class="reward-icon">
+
+<div class="reward-info">
+
+<div class="reward-title">
+Rastreador de Zorros
+</div>
+
+<div class="reward-sub">
+5 amigos invitados
+</div>
+
+</div>
+
+</div>
+
+<div class="reward-card">
+
+<img
+src="images/scarecrow.png"
+class="reward-icon">
+
+<div class="reward-info">
+
+<div class="reward-title">
+Espantapájaros
+</div>
+
+<div class="reward-sub">
+10 amigos invitados · 12h
+</div>
+
+</div>
+
+</div>
+
+<div class="reward-card">
+
+<img
+src="images/fox-repellent.png"
+class="reward-icon">
+
+<div class="reward-info">
+
+<div class="reward-title">
+Espanta Zorros
+</div>
+
+<div class="reward-sub">
+20 amigos invitados · 12h
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<p id="nextReward"></p>
+
+<hr>
+
+<h3>
+🎒 Tus recompensas desbloqueadas
+</h3>
+
+<div id="myItems"></div>
+
+<script src="app.js"></script>
+
 </body>
 </html>
