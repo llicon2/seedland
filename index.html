@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
+
 <title>SeedLand Pre-registro</title>
 
 <link rel="stylesheet" href="style.css">
@@ -9,20 +11,27 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
+
 <style>
 
-/* fondo general */
+/* fondo */
+
 body{
 margin:0;
 font-family:system-ui;
 text-align:center;
 padding:18px;
+
 background:
 radial-gradient(circle at top,#0b2e1c,#071c12);
+
 color:white;
 }
 
+
+
 /* banner */
+
 .header{
 margin-bottom:18px;
 }
@@ -34,13 +43,53 @@ box-shadow:0 8px 25px rgba(0,0,0,0.4);
 margin-bottom:12px;
 }
 
+
+
+/* caja titulo */
+
 .title-box{
 background:rgba(0,0,0,0.35);
 padding:14px;
 border-radius:14px;
 }
 
+
+
+/* preview plantas */
+
+.preview-box{
+margin-top:14px;
+background:rgba(255,255,255,0.05);
+padding:12px;
+border-radius:14px;
+}
+
+.preview-title{
+margin-bottom:8px;
+font-weight:bold;
+}
+
+.plant-preview{
+display:flex;
+justify-content:center;
+gap:12px;
+flex-wrap:wrap;
+}
+
+.plant-preview img{
+width:60px;
+image-rendering:pixelated;
+transition:0.15s;
+}
+
+.plant-preview img:hover{
+transform:scale(1.15);
+}
+
+
+
 /* botones */
+
 button{
 font-size:16px;
 border:none;
@@ -54,7 +103,10 @@ button:hover{
 transform:scale(1.05);
 }
 
+
+
 /* boton preregistro */
+
 #btn{
 background:linear-gradient(#5edc84,#2ea043);
 color:white;
@@ -63,7 +115,10 @@ width:100%;
 margin-top:10px;
 }
 
+
+
 /* boton entrar */
+
 .main-btn{
 background:linear-gradient(#5edc84,#2ea043);
 color:white;
@@ -71,18 +126,28 @@ font-weight:bold;
 width:100%;
 }
 
+
+
 /* boton canal */
+
 .secondary-btn{
 display:inline-block;
 text-decoration:none;
 text-align:center;
+
 background:linear-gradient(#66b3ff,#2e8fe0);
+
 color:white;
+
 border-radius:12px;
+
 padding:12px;
 }
 
-/* cajas */
+
+
+/* acceso */
+
 .access-box{
 margin-top:16px;
 display:flex;
@@ -107,7 +172,10 @@ font-size:14px;
 opacity:0.95;
 }
 
+
+
 /* recompensas */
+
 #rewardsBox{
 margin-top:12px;
 display:flex;
@@ -118,15 +186,20 @@ gap:10px;
 .reward-card{
 display:flex;
 align-items:center;
+
 background:rgba(255,255,255,0.06);
+
 padding:10px;
+
 border-radius:14px;
+
 gap:10px;
 }
 
 .reward-icon{
 width:48px;
 height:48px;
+
 image-rendering:pixelated;
 }
 
@@ -143,13 +216,18 @@ opacity:0.8;
 font-size:13px;
 }
 
+
+
 /* items */
+
 #myItems{
 margin-top:10px;
 display:flex;
 flex-direction:column;
 gap:6px;
 }
+
+
 
 hr{
 opacity:0.2;
@@ -160,81 +238,195 @@ margin:30px 0;
 
 </head>
 
+
+
 <body>
 
+
+
 <!-- banner -->
+
 <div class="header">
 
 <img src="images/banner.png" class="banner">
 
+
+
 <div class="title-box">
-<h1>🌱 SeedLand</h1>
+
+<h1>
+
+🌱 SeedLand
+
+</h1>
+
+
 
 <p>
+
 Pre-regístrate y recibe recompensas cuando el juego abra
+
 </p>
 
+
+
+</div>
+
+
+
+<!-- preview plantas -->
+
+<div class="preview-box">
+
+<div class="preview-title">
+
+🌱 Ejemplos de plantas
+
+</div>
+
+
+
+<div class="plant-preview">
+
+<img src="images/plants/1brote_verde.png">
+
+<img src="images/plants/3bulbo_terrenal.png">
+
+<img src="images/plants/5hierba_dorada.png">
+
+<img src="images/plants/7trigo.png">
+
 </div>
 
 </div>
+
+
+
+</div>
+
+
 
 <!-- contador -->
-<p>Jugadores preregistrados</p>
 
-<h2 id="count">0</h2>
+<p>
+
+Jugadores preregistrados
+
+</p>
+
+
+
+<h2 id="count">
+
+0
+
+</h2>
+
+
 
 <button id="btn">
+
 🚀 Pre-registrarme
+
 </button>
+
+
 
 <p id="status"></p>
 
+
+
 <p id="invitedBy"></p>
 
+
+
 <!-- acceso -->
+
 <div id="accessBox" class="access-box">
 
+
+
 <button id="enterGameBtn" class="main-btn">
+
 🎮 Entrar al juego
+
 </button>
+
+
 
 <div id="closedAccessBox" class="closed-access-box" style="display:none;">
 
+
+
 <div class="closed-title">
+
 🔒 Acceso anticipado cerrado
+
 </div>
+
+
 
 <div class="closed-desc">
+
 El juego todavía está en pruebas privadas.
+
 Sigue el canal oficial para enterarte del lanzamiento.
-</div>
 
 </div>
+
+
+
+</div>
+
+
 
 <a
+
 id="channelBtn"
+
 class="secondary-btn"
+
 href="https://t.me/seedland_news"
+
 target="_blank">
 
 📢 Ir al canal oficial
 
 </a>
 
+
+
 </div>
 
+
+
 <hr>
+
+
 
 <!-- referidos -->
 
 <h3>
+
 🎁 Invita amigos
+
 </h3>
 
+
+
 <p>
+
 Tus referidos:
-<span id="myRefCount">0</span>
+
+<span id="myRefCount">
+
+0
+
+</span>
+
 </p>
+
+
 
 <button id="copyRefBtn">
 
@@ -242,115 +434,186 @@ Tus referidos:
 
 </button>
 
+
+
 <p id="refLink"></p>
 
+
+
 <hr>
+
+
 
 <!-- recompensas -->
 
 <h2>
+
 🎁 Invita y desbloquea ventajas
+
 </h2>
 
+
+
 <p>
+
 Invita amigos y gana ventajas exclusivas para el lanzamiento
+
 </p>
+
+
 
 <div id="rewardsBox">
 
+
+
 <div class="reward-card">
 
-<img
-src="images/crow-radar.png"
-class="reward-icon">
+<img src="images/crow-radar.png" class="reward-icon">
+
+
 
 <div class="reward-info">
 
 <div class="reward-title">
+
 Radar de Cuervos
+
 </div>
 
+
+
 <div class="reward-sub">
+
 3 amigos invitados
+
 </div>
+
+
 
 </div>
 
 </div>
+
+
 
 <div class="reward-card">
 
-<img
-src="images/fox-tracker.png"
-class="reward-icon">
+<img src="images/fox-tracker.png" class="reward-icon">
+
+
 
 <div class="reward-info">
 
 <div class="reward-title">
+
 Rastreador de Zorros
+
 </div>
 
+
+
 <div class="reward-sub">
+
 5 amigos invitados
+
 </div>
+
+
 
 </div>
 
 </div>
+
+
 
 <div class="reward-card">
 
-<img
-src="images/scarecrow.png"
-class="reward-icon">
+<img src="images/scarecrow.png" class="reward-icon">
+
+
 
 <div class="reward-info">
 
 <div class="reward-title">
+
 Espantapájaros
+
 </div>
+
+
 
 <div class="reward-sub">
+
 10 amigos invitados · 12h
+
 </div>
+
+
 
 </div>
 
 </div>
+
+
 
 <div class="reward-card">
 
-<img
-src="images/fox-repellent.png"
-class="reward-icon">
+<img src="images/fox-repellent.png" class="reward-icon">
+
+
 
 <div class="reward-info">
 
 <div class="reward-title">
+
 Espanta Zorros
+
 </div>
+
+
 
 <div class="reward-sub">
+
 20 amigos invitados · 12h
+
 </div>
+
+
 
 </div>
 
 </div>
 
+
+
 </div>
+
+
 
 <p id="nextReward"></p>
 
+
+
 <hr>
 
+
+
 <h3>
+
 🎒 Tus recompensas desbloqueadas
+
 </h3>
+
+
 
 <div id="myItems"></div>
 
+
+
 <script src="app.js"></script>
 
+
+
 </body>
+
 </html>
