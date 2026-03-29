@@ -3,6 +3,11 @@ console.log("APP INICIADA");
 const SUPABASE_URL = "https://lvtpsqoqywoxrvbqfycd.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dHBzcW9xeXdveHJ2YnFmeWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNDg1ODEsImV4cCI6MjA4ODkyNDU4MX0.AiHAyOS3zZrX3R1gPhp6GlXDOI5RO6eEF1lnLv0tnCU";
 
+const CHANNEL_URL = "https://t.me/seedland_news";
+
+const enterGameBtn = document.getElementById("enterGameBtn");
+const closedAccessBox = document.getElementById("closedAccessBox");
+const channelBtn = document.getElementById("channelBtn");
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const tg = window.Telegram.WebApp;
@@ -24,6 +29,18 @@ copyRefBtn.addEventListener("click", copyReferralLink);
 
 function getTelegramUser() {
   return tg.initDataUnsafe?.user || null;
+}
+
+function renderAccessSection(player) {
+  channelBtn.href = CHANNEL_URL;
+
+  if (player?.can_play === true) {
+    enterGameBtn.style.display = "block";
+    closedAccessBox.style.display = "none";
+  } else {
+    enterGameBtn.style.display = "none";
+    closedAccessBox.style.display = "block";
+  }
 }
 
 function getReferrerIdFromUrl() {
@@ -371,5 +388,9 @@ async function init() {
   await grantReferralRewards(myTelegramId);
   await loadMyItems();
 }
+
+enterGameBtn.addEventListener("click", () => {
+  window.location.href = "game.html";
+});
 
 init();

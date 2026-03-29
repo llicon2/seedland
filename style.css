@@ -109,6 +109,38 @@ button:disabled {
   border-radius: 10px;
   font-weight: bold;
 }
+.access-box {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.closed-access-box {
+  background: rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+  color: white;
+}
+
+.closed-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.closed-desc {
+  font-size: 14px;
+  opacity: 0.95;
+  line-height: 1.35;
+}
+
+.secondary-btn {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+  background: linear-gradient(#5bb8ff, #2e8fe0);
+}
 
 .game-link-btn:hover {
   opacity: 0.92;

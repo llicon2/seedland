@@ -19,7 +19,23 @@
 
   <p id="status"></p>
   <p id="invitedBy"></p>
-  <a href="game.html" class="game-link-btn">🎮 Entrar al juego</a>
+  <div id="accessBox" class="access-box">
+  <button id="enterGameBtn" class="main-btn" style="display:none;">
+    🎮 Entrar al juego
+  </button>
+
+  <div id="closedAccessBox" class="closed-access-box" style="display:none;">
+    <div class="closed-title">🔒 Acceso anticipado cerrado</div>
+    <div class="closed-desc">
+      El juego todavía está en pruebas privadas.  
+      Sigue el canal oficial para enterarte del lanzamiento.
+    </div>
+  </div>
+
+  <a id="channelBtn" class="main-btn secondary-btn" href="https://t.me/seedland_news" target="_blank">
+    📢 Ir al canal oficial
+  </a>
+</div>
 
   <hr style="margin: 30px 0; opacity: 0.25;">
 
